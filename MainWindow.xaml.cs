@@ -18,10 +18,10 @@ using System.Windows.Threading;
 
 /// <summary>
 /// список доработок:
-///     1. сделать нормальные цвета
-///     2. доделать Check()
+///     1. сделать нормальные цвета        X
+///     2. доделать Check()                X
 ///     3. сделать многопоточность
-///     4. сделать бекап
+///     4. сделать бекап                   X
 ///     5. начать делать новую версию
 /// </summary>
 namespace AntsAI
@@ -30,6 +30,10 @@ namespace AntsAI
     {
         abstract class Ant
         {
+            private bool _TriggerCol1 = false;
+            public bool TriggerCol1 { get => _TriggerCol1; set => _TriggerCol1 = value; }
+            private bool _TriggerCol2 = false;
+            public bool TriggerCol2 { get => _TriggerCol2; set => _TriggerCol2 = value; }
             private double _Vect;
             public double Vect { get => _Vect; set => _Vect = value; }
             private int[] _Steps;
@@ -104,7 +108,7 @@ namespace AntsAI
             public static List<int[]> Mas   = new List<int[]>();
 
             public static int AntsQuantity = 1500;
-            public static int AntRadius    = 2;
+            public static int AntRadius    = 3;
             public static int BaseRadius   = 40;
             public static int SignalRadius = 32;
 
@@ -115,11 +119,10 @@ namespace AntsAI
             public static bool BorderButtonTrigger = false;
             public static bool StartButtonTrigger  = true;
 
-            public static SolidColorBrush Red    = new SolidColorBrush(Color.FromRgb(255, 0  , 0  ));
-            public static SolidColorBrush Green  = new SolidColorBrush(Color.FromRgb(0  , 255, 0  ));
-            public static SolidColorBrush Blue   = new SolidColorBrush(Color.FromRgb(0  , 0  , 255));
-            public static SolidColorBrush White  = new SolidColorBrush(Color.FromRgb(255, 0  , 0  ));
-            public static SolidColorBrush Purple = new SolidColorBrush(Color.FromRgb(255, 0  , 0  ));
+            public static SolidColorBrush Blue   = new SolidColorBrush(Color.FromRgb(81 , 77 , 255));
+            public static SolidColorBrush Gray   = new SolidColorBrush(Color.FromRgb(112, 128, 144));
+            public static SolidColorBrush Red    = new SolidColorBrush(Color.FromRgb(255, 67 , 67 ));
+            public static SolidColorBrush White  = new SolidColorBrush(Color.FromRgb(226, 226, 226));
 
             public static DateTime Start;
             public static Random Rnd            = new Random         ();
@@ -177,11 +180,29 @@ namespace AntsAI
                     (El.Y - Ant.Y) * (El.Y - Ant.Y) <= 
                     El.Radius * El.Radius)
                 {
-                    if (El is Home)
+                    if (El is Border)
                     {
-                        //Ant.Vect = Math.Atan2(Ant.Y - El.Y, Ant.X - Ant.Y);
-                        Ant.Vect = Ant.Vect - Math.PI;
-                        Ant.Steps[0] = 0;
+                        Ant.TriggerCol1 = true;
+
+                        if (!Ant.TriggerCol2)
+                        {
+                            Ant.Vect = Math.Atan2(Ant.Y - El.Y, Ant.X - El.X);
+
+                            Ant.TriggerCol2 = true;
+                        }
+                    }
+                    else if (El is Home)
+                    {
+                        Ant.TriggerCol1 = true;
+
+                        if (!Ant.TriggerCol2)
+                        {
+                            //Ant.Vect = Math.Atan2(Ant.Y - El.Y, Ant.X - Ant.Y);
+                            Ant.Vect = Ant.Vect - Math.PI;
+                            Ant.Steps[0] = 0;
+
+                            Ant.TriggerCol2 = true;
+                        }
 
                         if (Ant is Worker)
                         {
@@ -200,10 +221,17 @@ namespace AntsAI
                     }
                     else if (El is Food)
                     {
-                        //double V1 = Math.Atan2(Ant.Y - El.Y, Ant.X - Ant.Y);
-                        //double V2 = Ant.Vect - Math.PI;
-                        Ant.Vect = Ant.Vect - Math.PI;
-                        Ant.Steps[1] = 0;
+                        Ant.TriggerCol1 = true;
+
+                        if (!Ant.TriggerCol2)
+                        {
+                            //double V1 = Math.Atan2(Ant.Y - El.Y, Ant.X - Ant.Y);
+                            //double V2 = Ant.Vect - Math.PI;
+                            Ant.Vect = Ant.Vect - Math.PI;
+                            Ant.Steps[1] = 0;
+
+                            Ant.TriggerCol2 = true;
+                        }
 
                         if (Ant is Worker)
                         {
@@ -219,15 +247,19 @@ namespace AntsAI
                             }
                         }
                     }
-                    else if (El is Border)
-                    {
-                        Ant.Vect = Math.Atan2(Ant.Y - El.Y, Ant.X - Ant.Y);
-                    }
+                    break;
                 }
             }
+            if (!Ant.TriggerCol1)
+            {
+                Ant.TriggerCol2 = false;
+            }
+            Ant.TriggerCol1 = false;
         }
         private void ChangeDir(Ant Ant, int i)
         {
+            if (Ant.TriggerCol2) return;
+
             double TrV = 100000;
             bool Tr = false;
 
@@ -308,7 +340,7 @@ namespace AntsAI
 
                 App.Ants.Remove(Ant);
             }
-            AntsText.Text = $"Ants: {App.Ants.Count} | from: {(int)AntsSlider.Value}";
+            AntsText.Text = $"Ants: {App.Ants.Count} | {(int)AntsSlider.Value}";
         }
         private void AntsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -348,7 +380,7 @@ namespace AntsAI
 
                 Fill = App.HomeButtonTrigger ? App.Blue : 
                        App.FoodButtonTrigger ? App.Red : 
-                       App.Green
+                       App.Gray
             };
 
             if (App.HomeButtonTrigger)
