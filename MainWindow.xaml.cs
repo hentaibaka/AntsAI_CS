@@ -15,15 +15,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-
-/// <summary>
-/// список доработок:
-///     1. сделать нормальные цвета        X
-///     2. доделать Check()                X
-///     3. сделать многопоточность
-///     4. сделать бекап                   X
-///     5. начать делать новую версию
-/// </summary>
 namespace AntsAI
 {
     public partial class MainWindow : Window
@@ -73,7 +64,7 @@ namespace AntsAI
         abstract class Base
         {
             private int _Radius;
-            public int Radius { get => _Radius; }
+            public int Radius { get => _Radius; set => _Radius = value; }
             private int _X;
             public int X { get => _X; }
             private int _Y;
@@ -91,11 +82,21 @@ namespace AntsAI
         }
         class Home : Base
         {
-            public Home(int X, int Y, int Radius, Ellipse Ellipse) : base(X, Y, Radius, Ellipse) { }
+            private int _Health;
+            public int Health { get => _Health; set => _Health = value > 1001 ? _Health : value; }
+            public Home(int X, int Y, int Radius, Ellipse Ellipse) : base(X, Y, Radius, Ellipse)
+            {
+                _Health = Radius * 10 + 1;
+            }
         }
         class Food : Base
         {
-            public Food(int X, int Y, int Radius, Ellipse Ellipse) : base(X, Y, Radius, Ellipse) { }
+            private int _Pieces;
+            public int Pieces { get => _Pieces; set => _Pieces = value; }
+            public Food(int X, int Y, int Radius, Ellipse Ellipse) : base(X, Y, Radius, Ellipse)
+            {
+                _Pieces = Radius * 10;
+            }
         }
         class Border : Base
         {
@@ -113,6 +114,8 @@ namespace AntsAI
             public static int SignalRadius = 32;
 
             public static int Counter = 0;
+
+            public static int Frame = 1;
 
             public static bool HomeButtonTrigger   = true;
             public static bool FoodButtonTrigger   = false;
@@ -142,7 +145,7 @@ namespace AntsAI
             App.Start = DateTime.Now;
 
             UpdateAnts();
-            foreach (Ant Ant in App.Ants) Draw(Ant);
+            Draw();
 
             TextFPS.Text = $"{(DateTime.Now - App.Start).Milliseconds}ms per frame";
             TextCounter.Text = $"Counter: {App.Counter}";
@@ -150,166 +153,224 @@ namespace AntsAI
         private void MainLoop(object sender, object e)
         {
             App.Start = DateTime.Now;
-
+            
             UpdateAnts();
-            foreach (Ant Ant in App.Ants) Draw(Ant);
-            for (int i = 0; i < App.Ants.Count; i++) UpdateDir(App.Ants[i], i);
-            foreach (Ant Ant in App.Ants) Check(Ant);
-            for (int i = 0; i < App.Ants.Count; i++) ChangeDir(App.Ants[i], i);
-            foreach (Ant Ant in App.Ants) Go(Ant);
+            UpdateBases();
+            Draw();
+            UpdateDir();
+            Check();
+            ChangeDir();
+            Go();
 
             App.Mas.Clear();
 
-            TextFPS.Text = $"{(DateTime.Now - App.Start).Milliseconds}ms per frame";
-            TextCounter.Text = $"Counter: {App.Counter}";
+            TextFPS.Text = $"{(DateTime.Now - App.Start).Milliseconds} ms per frame";
+            TextCounter.Text = $"Counter: {App.Counter} | {App.Frame} \n{App.Bases.Count}";
         }
-        private void Draw(Ant Ant)
+        private void Draw()
         {
-            Canvas.SetLeft(Ant.Ellipse, Ant.X);
-            Canvas.SetTop(Ant.Ellipse, Ant.Y);
-        }
-        private void UpdateDir(Ant Ant, int i)
-        {
-            App.Mas.Add(new int[5] { Ant.X, Ant.Y, Ant.Steps[0] + App.SignalRadius, Ant.Steps[1] + App.SignalRadius, i });
-        }
-        private void Check(Ant Ant)
-        {
-            foreach (Base El in App.Bases)
+            foreach (Ant Ant in App.Ants)
             {
-                if ((El.X - Ant.X) * (El.X - Ant.X) + 
-                    (El.Y - Ant.Y) * (El.Y - Ant.Y) <= 
-                    El.Radius * El.Radius)
+                Canvas.SetLeft(Ant.Ellipse, Ant.X);
+                Canvas.SetTop(Ant.Ellipse, Ant.Y);
+            }
+        }
+        private void UpdateDir()
+        {
+           for (int i = 0; i < App.Ants.Count; i++)
+            {
+                App.Mas.Add(new int[5] { 
+                    App.Ants[i].X, 
+                    App.Ants[i].Y, 
+                    App.Ants[i].Steps[0] + App.SignalRadius,
+                    App.Ants[i].Steps[1] + App.SignalRadius, 
+                    i });
+            }
+        }
+        private void Check()
+        {
+            for (int i = 0; i < App.Ants.Count; i++)
+            {
+                Ant Ant = App.Ants[i];
+
+                foreach (Base El in App.Bases)
                 {
-                    if (El is Border)
+                    if ((El.X - Ant.X) * (El.X - Ant.X) +
+                        (El.Y - Ant.Y) * (El.Y - Ant.Y) <=
+                        El.Radius * El.Radius)
                     {
-                        Ant.TriggerCol1 = true;
-
-                        if (!Ant.TriggerCol2)
+                        if (El is Border)
                         {
-                            Ant.Vect = Math.Atan2(Ant.Y - El.Y, Ant.X - El.X);
+                            Ant.TriggerCol1 = true;
 
-                            Ant.TriggerCol2 = true;
-                        }
-                    }
-                    else if (El is Home)
-                    {
-                        Ant.TriggerCol1 = true;
-
-                        if (!Ant.TriggerCol2)
-                        {
-                            //Ant.Vect = Math.Atan2(Ant.Y - El.Y, Ant.X - Ant.Y);
-                            Ant.Vect = Ant.Vect - Math.PI;
-                            Ant.Steps[0] = 0;
-
-                            Ant.TriggerCol2 = true;
-                        }
-
-                        if (Ant is Worker)
-                        {
-                            if (!((Worker)Ant).Target)
+                            if (!Ant.TriggerCol2)
                             {
-                                ((Worker)Ant).Target = true;
-                                Ant.Ellipse.Fill = App.Red;
+                                Ant.Vect = Math.Atan2(Ant.Y - El.Y, Ant.X - El.X);
 
-                                if (((Worker)Ant).State)
-                                {
-                                    ((Worker)Ant).State = false;
-                                    App.Counter++;
-                                }
+                                Ant.TriggerCol2 = true;
                             }
                         }
-                    }
-                    else if (El is Food)
-                    {
-                        Ant.TriggerCol1 = true;
-
-                        if (!Ant.TriggerCol2)
+                        else if (El is Home)
                         {
-                            //double V1 = Math.Atan2(Ant.Y - El.Y, Ant.X - Ant.Y);
-                            //double V2 = Ant.Vect - Math.PI;
-                            Ant.Vect = Ant.Vect - Math.PI;
-                            Ant.Steps[1] = 0;
+                            Ant.TriggerCol1 = true;
 
-                            Ant.TriggerCol2 = true;
-                        }
-
-                        if (Ant is Worker)
-                        {
-                            if (((Worker)Ant).Target)
+                            if (!Ant.TriggerCol2)
                             {
-                                ((Worker)Ant).Target = false;
-                                Ant.Ellipse.Fill = App.Blue;
+                                //Ant.Vect = Math.Atan2(Ant.Y - El.Y, Ant.X - Ant.Y);
+                                Ant.Vect = Ant.Vect - Math.PI;
+                                Ant.Steps[0] = 0;
 
-                                if (!((Worker)Ant).State)
-                                {
-                                    ((Worker)Ant).State = true;
-                                }
+                                Ant.TriggerCol2 = true;
                             }
-                        }
-                    }
-                    break;
-                }
-            }
-            if (!Ant.TriggerCol1)
-            {
-                Ant.TriggerCol2 = false;
-            }
-            Ant.TriggerCol1 = false;
-        }
-        private void ChangeDir(Ant Ant, int i)
-        {
-            if (Ant.TriggerCol2) return;
 
-            double TrV = 100000;
-            bool Tr = false;
-
-            foreach (int[] El in App.Mas)
-            {
-                if (i != El[4])
-                {
-                    if ((El[0] - Ant.X) * (El[0] - Ant.X) + 
-                        (El[1] - Ant.Y) * (El[1] - Ant.Y) <= 
-                        App.SignalRadius * App.SignalRadius)
-                    {
-                        if (El[2] < Ant.Steps[0])
-                        {
-                            Ant.Steps[0] = El[2];
                             if (Ant is Worker)
                             {
                                 if (!((Worker)Ant).Target)
                                 {
-                                    TrV = Math.Atan2(El[1] - Ant.Y, El[0] - Ant.X);
-                                    Tr = true;
+                                    ((Worker)Ant).Target = true;
+                                    Ant.Ellipse.Fill = App.Red;
+
+                                    if (((Worker)Ant).State && ((Home)El).Health > 0)
+                                    {
+                                        ((Worker)Ant).State = false;
+                                        ((Home)El).Health++;
+                                        App.Counter++;
+                                    }
                                 }
                             }
                         }
-                        if (El[3] < Ant.Steps[1])
+                        else if (El is Food)
                         {
-                            Ant.Steps[1] = El[3];
+                            Ant.TriggerCol1 = true;
+
+                            if (!Ant.TriggerCol2)
+                            {
+                                //double V1 = Math.Atan2(Ant.Y - El.Y, Ant.X - Ant.Y);
+                                //double V2 = Ant.Vect - Math.PI;
+                                Ant.Vect = Ant.Vect - Math.PI;
+                                Ant.Steps[1] = 0;
+
+                                Ant.TriggerCol2 = true;
+                            }
+
                             if (Ant is Worker)
                             {
                                 if (((Worker)Ant).Target)
                                 {
-                                    TrV = Math.Atan2(El[1] - Ant.Y, El[0] - Ant.X);
-                                    Tr = true;
+                                    ((Worker)Ant).Target = false;
+                                    Ant.Ellipse.Fill = App.Blue;
+
+                                    if (!((Worker)Ant).State && ((Food)El).Pieces > 0)
+                                    {
+                                        ((Worker)Ant).State = true;
+                                        ((Food)El).Pieces--;
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+                if (!Ant.TriggerCol1)
+                {
+                    Ant.TriggerCol2 = false;
+                }
+                Ant.TriggerCol1 = false;
+            }
+        }
+        private void ChangeDir()
+        {
+            for (int i = 0; i < App.Ants.Count; i++)
+            {
+                Ant Ant = App.Ants[i];
+
+                if (Ant.TriggerCol2) continue;
+
+                double TrV = 100000;
+                bool Tr = false;
+
+                foreach (int[] El in App.Mas)
+                {
+                    if (i != El[4])
+                    {
+                        if ((El[0] - Ant.X) * (El[0] - Ant.X) +
+                            (El[1] - Ant.Y) * (El[1] - Ant.Y) <=
+                            App.SignalRadius * App.SignalRadius)
+                        {
+                            if (El[2] < Ant.Steps[0])
+                            {
+                                Ant.Steps[0] = El[2];
+                                if (Ant is Worker)
+                                {
+                                    if (!((Worker)Ant).Target)
+                                    {
+                                        TrV = Math.Atan2(El[1] - Ant.Y, El[0] - Ant.X);
+                                        Tr = true;
+                                    }
+                                }
+                            }
+                            if (El[3] < Ant.Steps[1])
+                            {
+                                Ant.Steps[1] = El[3];
+                                if (Ant is Worker)
+                                {
+                                    if (((Worker)Ant).Target)
+                                    {
+                                        TrV = Math.Atan2(El[1] - Ant.Y, El[0] - Ant.X);
+                                        Tr = true;
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                if (Tr) Ant.Vect = TrV;
             }
-            if (Tr) Ant.Vect = TrV;
         }
-        private void Go(Ant Ant)
+        private void Go()
         {
-            Ant.X += (int)(Math.Cos(Ant.Vect) * Ant.Speed);
-            Ant.Y += (int)(Math.Sin(Ant.Vect) * Ant.Speed);
+            foreach (Ant Ant in App.Ants)
+            {
+                Ant.X += (int)(Math.Cos(Ant.Vect) * Ant.Speed);
+                Ant.Y += (int)(Math.Sin(Ant.Vect) * Ant.Speed);
 
-            if (Ant.X > (int)MainCanvas.ActualWidth - 2 || Ant.X < 1) Ant.Vect = Math.PI - Ant.Vect;
-            if (Ant.Y > (int)MainCanvas.ActualHeight - 2 || Ant.Y < 1) Ant.Vect = Math.PI * 2 - Ant.Vect;
+                if (Ant.X > (int)MainCanvas.ActualWidth - 2 || Ant.X < 1) Ant.Vect = Math.PI - Ant.Vect;
+                if (Ant.Y > (int)MainCanvas.ActualHeight - 2 || Ant.Y < 1) Ant.Vect = Math.PI * 2 - Ant.Vect;
 
-            Ant.Steps[0]++;
-            Ant.Steps[1]++;
+                Ant.Steps[0]++;
+                Ant.Steps[1]++;
+            }
+        }
+        private void UpdateBases()
+        {
+            foreach (Base Base in App.Bases)
+            {
+                if (Base is Food)
+                {
+                    Base.Radius = ((Food)Base).Pieces / 10;
+
+                    Base.Ellipse.Width = Base.Ellipse.Height = Base.Radius * 2;
+
+                    Canvas.SetLeft(Base.Ellipse, Base.X - (Base.Ellipse.Width / 2));
+                    Canvas.SetTop(Base.Ellipse, Base.Y - (Base.Ellipse.Height / 2));
+
+                    if (((Food)Base).Pieces == 0) MainCanvas.Children.Remove(Base.Ellipse);
+                }
+                else if (Base is Home)
+                {
+                    ((Home)Base).Health--;
+
+                    Base.Radius = ((Home)Base).Health / 10;
+
+                    Base.Ellipse.Width = Base.Ellipse.Height = Base.Radius * 2;
+
+                    Canvas.SetLeft(Base.Ellipse, Base.X - (Base.Ellipse.Width / 2));
+                    Canvas.SetTop(Base.Ellipse, Base.Y - (Base.Ellipse.Height / 2));
+
+                    if (((Home)Base).Health == 0) MainCanvas.Children.Remove(Base.Ellipse);
+                }
+            }
+            App.Bases.RemoveAll((El) => El is Food ? ((Food)El).Pieces <= 0 : El is Home ? ((Home)El).Health <= 0 : false);
         }
         private void UpdateAnts()
         {
@@ -330,7 +391,7 @@ namespace AntsAI
                 Canvas.SetLeft(EllipseAnt, X - App.AntRadius);
                 Canvas.SetTop(EllipseAnt, Y - App.AntRadius);
 
-                App.Ants.Add(new Worker(X, Y, true, EllipseAnt));
+                App.Ants.Add(new Worker(X, Y, Target, EllipseAnt));
             }
             while (App.Ants.Count > App.AntsQuantity)
             {
@@ -348,7 +409,6 @@ namespace AntsAI
 
             App.AntsQuantity = Value;
         }
-
         private void RadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             int Value = (int)((Slider)sender).Value;
@@ -357,7 +417,6 @@ namespace AntsAI
 
             RadiusText.Text = $"Radius: {Value}";
         }
-
         private void MainCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
             Point p = e.GetPosition(this);
@@ -414,7 +473,6 @@ namespace AntsAI
 
             Canvas.SetZIndex(EllipseBase, -1);
         }
-
         private void BaseButton_Click(object sender, RoutedEventArgs e)
         {
             switch (((Button)sender).Content)
@@ -444,7 +502,6 @@ namespace AntsAI
                     break;
             }
         }
-
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
             if (App.StartButtonTrigger)
@@ -464,4 +521,3 @@ namespace AntsAI
         }
     }
 }
-
