@@ -10,9 +10,12 @@
         </Grid.ColumnDefinitions>
         <Canvas x:Name="MainCanvas" Grid.Column="0" Background="#e2e2e2" MouseDown="MainCanvas_MouseDown" 
                 Grid.ColumnSpan="2" Margin="0,0,199.6,0.4"/>
-        <Grid Grid.Column="1" Background="#1b1d2e" Panel.ZIndex="10">
-            <Grid x:Name="ControlsGrid" Grid.Column="1" VerticalAlignment="Center">
+        <Grid Grid.Column="1" Background="#1b1d2e" Panel.ZIndex="10" >
+            <Grid x:Name="Mode1Grid" Grid.Column="1" VerticalAlignment="Center" Visibility="Visible">
                 <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
@@ -38,11 +41,32 @@
                         Click="BaseButton_Click" FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
                 <Button x:Name="BorderButton" Grid.Row="6" Width="100" Height="35" Margin="5" Background="#708090" Content="Border" 
                         Click="BaseButton_Click" FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
-                <Button x:Name="StartButton" Grid.Row="7" Width="100" Height="35" Margin="5" Background="#666699" Content="Start" 
+                <Button x:Name="HealthButton" Grid.Row="7" Width="100" Height="35" Margin="5" Background="#FF39E541" Content="Health" 
+                        Click="HealthButton_Click"  FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
+                <Button x:Name="ModeButton1" Grid.Row="8" Width="100" Height="35" Margin="5" Background="#FFDA49C1" Content="Mode" 
+                        Click="ModeButton_Click"  FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
+                <Button x:Name="StartButton1" Grid.Row="9" Width="100" Height="35" Margin="5" Background="#666699" Content="Start" 
                         Click="StartButton_Click" FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
-                <TextBlock x:Name="TextFPS" Grid.Row="8" VerticalAlignment="Center" HorizontalAlignment="Center" Text="----" 
+                <TextBlock x:Name="TextFPS1" Grid.Row="10" VerticalAlignment="Center" HorizontalAlignment="Center" Text="----" 
                            FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
-                <TextBlock x:Name="TextCounter" Grid.Row="9" VerticalAlignment="Center" HorizontalAlignment="Center" Text="----" 
+                <TextBlock x:Name="TextCounter" Grid.Row="11" VerticalAlignment="Center" HorizontalAlignment="Center" Text="----" 
+                           FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
+            </Grid>
+            <Grid x:Name="Mode2Grid" Grid.Column="1" VerticalAlignment="Center" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Button x:Name="ModeButton2" Grid.Row="0" Width="100" Height="35" Margin="5" Background="#FFDA49C1" Content="Mode" 
+                        Click="ModeButton_Click"  FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
+                <Button x:Name="StartButton2" Grid.Row="1" Width="100" Height="35" Margin="5" Background="#666699" Content="Start" 
+                        Click="StartButton_Click" FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
+                <TextBlock x:Name="TextFPS2" Grid.Row="10" VerticalAlignment="Center" HorizontalAlignment="Center" Text="----" 
                            FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
             </Grid>
         </Grid>
