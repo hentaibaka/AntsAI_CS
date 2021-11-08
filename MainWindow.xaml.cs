@@ -44,8 +44,8 @@ namespace AntsAI
         public Movable(double X, double Y, Ellipse Ellipse)
         {
             _Id = _IdS++;
-            _Vect = App1.Rnd.NextDouble() * Math.PI * 2;
-            _Speed = 2 + App1.Rnd.Next(2);
+            _Vect = AntsAIGame.Rnd.NextDouble() * Math.PI * 2;
+            _Speed = 2 + AntsAIGame.Rnd.Next(2);
             _X = X;
             _Y = Y;
             _Ellipse = Ellipse;
@@ -92,7 +92,7 @@ namespace AntsAI
         {
             _Health = 400;
             _Radius = 20;
-            _Speed = App1.Rnd.NextDouble() + 0.2;
+            _Speed = AntsAIGame.Rnd.NextDouble() + 0.2;
         }
     }
     class MovableFood : Movable
@@ -107,7 +107,7 @@ namespace AntsAI
         {
             _Pieces = 400;
             _Radius = 20;
-            _Speed = App1.Rnd.NextDouble() + 0.2;
+            _Speed = AntsAIGame.Rnd.NextDouble() + 0.2;
         }
     }
     abstract class Base
@@ -157,578 +157,96 @@ namespace AntsAI
     {
         public Border(double X, double Y, int Radius, Ellipse Ellipse) : base(X, Y, Radius, Ellipse) { }
     }
-    static class App1
+    class AntsAIGame
     {
-        public static List<Ant> Ants = new List<Ant>();
-        public static List<Base> Bases = new List<Base>();
-        public static List<Queen> Queens = new List<Queen>();
-        public static List<MovableFood> MovableFoods = new List<MovableFood>();
-        public static List<double[]> Mas = new List<double[]>();
+        public List<Ant> Ants = new List<Ant>();
+        public List<Base> Bases = new List<Base>();
+        public List<Queen> Queens = new List<Queen>();
+        public List<MovableFood> MovableFoods = new List<MovableFood>();
+        public List<double[]> Mas = new List<double[]>();
 
-        public static int AntsQuantity = 1500;
-        public static int QueensQuantity = 5;
-        public static int MovableFoodsQuantity = 10;
-        public static int NewQueen = 400;
-        public static double AntRadius = 1.5;
-        public static int BaseRadius = 40;
-        public static int SignalRadius = 32;
+        private int _AntsQuantity;
+        public int AntsQuantity { get => _AntsQuantity; set => _AntsQuantity = value; }
+
+        protected double AntRadius = 1.5;
+        public int BaseRadius = 40;
+        protected int SignalRadius = 32;
 
         public static int Width;
         public static int Height;
 
-        public static int Counter = 0;
+        protected int Counter = 0;
 
-        public static bool HomeButtonTrigger = true;
-        public static bool FoodButtonTrigger = false;
-        public static bool BorderButtonTrigger = false;
-        public static bool StartButtonTrigger = true;
-        public static bool HealthButtonTrigger = false;
+        public bool HomeButtonTrigger = true;
+        public bool FoodButtonTrigger = false;
+        public bool BorderButtonTrigger = false;
+        public bool StartButtonTrigger = true;
+        public bool HealthButtonTrigger = false;
         public static bool ModeButtonTrigger = true;
 
-        public static SolidColorBrush HomeColor = new SolidColorBrush(Color.FromRgb(81, 77, 255));
-        public static SolidColorBrush BorderColor = new SolidColorBrush(Color.FromRgb(112, 128, 144));
-        public static SolidColorBrush ScoutColor = new SolidColorBrush(Color.FromRgb(28, 28, 56));
-        public static SolidColorBrush FoodColor = new SolidColorBrush(Color.FromRgb(255, 67, 67));
-        public static SolidColorBrush White = new SolidColorBrush(Color.FromRgb(226, 226, 226));
+        protected SolidColorBrush HomeColor = new SolidColorBrush(Color.FromRgb(81, 77, 255));
+        protected SolidColorBrush BorderColor = new SolidColorBrush(Color.FromRgb(112, 128, 144));
+        protected SolidColorBrush ScoutColor = new SolidColorBrush(Color.FromRgb(28, 28, 56));
+        protected SolidColorBrush FoodColor = new SolidColorBrush(Color.FromRgb(255, 67, 67));
+        protected SolidColorBrush White = new SolidColorBrush(Color.FromRgb(226, 226, 226));
 
         public static Random Rnd = new Random();
+
         public static DispatcherTimer Timer = new DispatcherTimer();
-        public static Stopwatch Time = new Stopwatch();
 
-    }
-    public partial class MainWindow : Window
-    {
-        public MainWindow()
+        protected Stopwatch Time = new Stopwatch();
+
+        public AntsAIGame() 
         {
-            InitializeComponent();
-
-            ChangeMode();
+            _AntsQuantity = 1500;
         }
-        private void ChangeMode()
+        protected void Draw()
         {
-            App1.Timer.Stop();
-
-            App1.Ants.Clear();
-            App1.Bases.Clear();
-            App1.Queens.Clear();
-            App1.MovableFoods.Clear();
-            App1.Mas.Clear();
-
-            MainCanvas.Children.Clear();
-
-            App1.AntsQuantity = 1500;
-            App1.QueensQuantity = 5;
-            App1.MovableFoodsQuantity = 10;
-            App1.NewQueen = 400;
-            App1.Counter = 0;
-
-            App1.HomeButtonTrigger = true;
-            App1.FoodButtonTrigger = false;
-            App1.BorderButtonTrigger = false;
-            App1.StartButtonTrigger = true;
-            App1.HealthButtonTrigger = false;
-
-            App1.Timer = new DispatcherTimer();
-
-            App1.Timer.Interval = TimeSpan.FromMilliseconds(10);
-
-            if (App1.ModeButtonTrigger)
+            foreach (Ant Ant in Ants)
             {
-                Mode2Grid.Visibility = Visibility.Collapsed;
-                Mode1Grid.Visibility = Visibility.Visible;
-
-                App1.Timer.Tick += PauseLoop1;
-            }
-            else
-            {
-                Mode1Grid.Visibility = Visibility.Collapsed;
-                Mode2Grid.Visibility = Visibility.Visible;
-
-                App1.Timer.Tick += PauseLoop2;
-            }
-
-            App1.Timer.Start();
-
-        }
-        private void PauseLoop2(object sender, object e)
-        {
-            App1.Rnd = new Random();
-
-            App1.Time.Restart();
-
-            UpdateSize();
-
-            UpdateAnts();
-            UpdateBases();
-
-            CreateQueen();
-            SpawnMovableFood();
-
-            Draw();
-
-            App1.Time.Stop();
-
-            TextFPS2.Text = $"{App1.Time.ElapsedMilliseconds} ms | " +
-                            $"{1000 / (App1.Time.ElapsedMilliseconds < 1 ? 1 : App1.Time.ElapsedMilliseconds)} FPS";
-        }
-        private void MainLoop2(object sender, object e)
-        {
-            App1.Rnd = new Random();
-
-            App1.Time.Restart();
-
-            UpdateSize();
-
-            UpdateAnts();
-
-            UpdateMovableFoods();
-            SpawnMovableFood();
-
-            CreateQueen();
-            UpdateQueens();
-
-            Parallel.ForEach(App1.Queens, UpdateQueenVect);
-
-            Draw();
-
-            foreach (Ant Ant in App1.Ants) UpdateDir(Ant);
-
-            Parallel.ForEach(App1.Ants, CheckMode2);
-            Parallel.ForEach(App1.Queens, QueenCheck);
-            Parallel.ForEach(App1.MovableFoods, MovableFoodCheck);
-
-            Parallel.ForEach(App1.Ants, ChangeDir);
-
-            Parallel.ForEach(App1.Ants, Go);
-            Parallel.ForEach(App1.Queens, QueenGo);
-            Parallel.ForEach(App1.MovableFoods, MovableFoodGo);
-
-            App1.Mas.Clear();
-
-            App1.Time.Stop();
-
-            TextFPS2.Text = $"{App1.Time.ElapsedMilliseconds} ms | " +
-                            $"{1000 / (App1.Time.ElapsedMilliseconds < 1 ? 1 : App1.Time.ElapsedMilliseconds)} FPS";
-        }
-        private void CreateQueen()
-        {
-            while (App1.Queens.Count > App1.QueensQuantity)
-            {
-                MainCanvas.Children.Remove(App1.Queens[0].Ellipse);
-                App1.Queens.RemoveAt(0);
-            }
-            if (App1.Queens.Count == 0)
-            {
-                Ellipse Ellipse = new Ellipse() { Width = 40, Height = 40, Fill = App1.HomeColor };
-                Queen Queen = new Queen((int)MainCanvas.ActualWidth / 2,
-                                        (int)MainCanvas.ActualHeight / 2,
-                                        Ellipse);
-
-                App1.Queens.Add(Queen);
-
-                MainCanvas.Children.Add(Ellipse);
-
-                Canvas.SetLeft(Ellipse, Queen.X - 20);
-                Canvas.SetTop(Ellipse, Queen.Y - 20);
-            }
-            foreach (Ant Ant in App1.Ants)
-            {
-                if (Ant.Steps[0] > App1.NewQueen && App1.Queens.Count < App1.QueensQuantity)
-                {
-                    Ellipse Ellipse = new Ellipse() { Width = 40, Height = 40, Fill = App1.HomeColor };
-
-                    App1.Queens.Add(new Queen(Ant.X, Ant.Y, Ellipse));
-
-                    MainCanvas.Children.Add(Ellipse);
-                    MainCanvas.Children.Remove(Ant.Ellipse);
-                }
-            }
-            App1.Ants.RemoveAll((El) => El.Steps[0] > 500);
-
-            QueensText.Text = $"Max Queens: {App1.QueensQuantity} Queens: {App1.Queens.Count}";
-        }
-        private void UpdateMovableFoods()
-        {
-            foreach (MovableFood MovableFood in App1.MovableFoods)
-            {
-                MovableFood.Radius = MovableFood.Pieces / 20;
-
-                MovableFood.Ellipse.Width = MovableFood.Ellipse.Height = MovableFood.Radius * 2;
-
-                if (MovableFood.Pieces <= 0) MainCanvas.Children.Remove(MovableFood.Ellipse);
-            }
-            App1.MovableFoods.RemoveAll((El) => El.Pieces <= 0);
-        }
-        private void UpdateQueens()
-        {
-            foreach (Queen Queen in App1.Queens)
-            {
-                Queen.Health--;
-
-                Queen.Radius = Queen.Health / 20;
-            
-                Queen.Ellipse.Width = Queen.Ellipse.Height = Queen.Radius * 2;
-
-                if (Queen.Health <= 0) MainCanvas.Children.Remove(Queen.Ellipse);
-            }
-            App1.Queens.RemoveAll((El) => El.Health <= 0);
-        }
-        private void SpawnMovableFood()
-        {
-            while (App1.MovableFoods.Count < App1.MovableFoodsQuantity)
-            { 
-
-                Ellipse Ellipse = new Ellipse { Width = 40, Height = 40, Fill = App1.FoodColor };
-
-                App1.MovableFoods.Add(new MovableFood(
-                                        App1.Rnd.Next(App1.Width - 48) + 24, 
-                                        App1.Rnd.Next(App1.Height - 48) + 24, 
-                                        Ellipse));
-                MainCanvas.Children.Add(Ellipse);
-            }
-            while (App1.MovableFoods.Count > App1.MovableFoodsQuantity)
-            {
-                MainCanvas.Children.Remove(App1.MovableFoods[0].Ellipse);
-                App1.MovableFoods.RemoveAt(0);
-            }
-
-            MovableFoodsText.Text = $"Food: {App1.MovableFoodsQuantity}";
-        }
-        private void UpdateQueenVect(Queen Queen)
-        {
-            double Len = 0;
-            double X = App1.Width / 2;
-            double Y = App1.Height / 2;
-            foreach (MovableFood El in App1.MovableFoods)
-            {
-                double Len1 = (Queen.X - El.X) * (Queen.X - El.X) + (Queen.Y - El.Y) * (Queen.Y - El.Y);
-
-                if (Len1 > Len)
-                {
-                    Len = Len1;
-                    X = El.X;
-                    Y = El.Y;
-                }
-            }
-            if (Len != 10000) Queen.Vect = Math.Atan2(Y - Queen.Y, X - Queen.X);
-        }
-        private void CheckMode2(Ant Ant)
-        {
-            foreach (MovableFood El in App1.MovableFoods)
-            {
-                if ((El.X - Ant.X) * (El.X - Ant.X) +
-                    (El.Y - Ant.Y) * (El.Y - Ant.Y) <=
-                    El.Radius * El.Radius)
-                {
-                    Ant.TriggerCol1 = true;
-
-                    if (!Ant.TriggerCol2)
-                    {
-                        Ant.Vect = Ant.Vect - Math.PI;
-                        Ant.Steps[1] = 0;
-
-                        Ant.TriggerCol2 = true;
-                    }
-
-                    if (Ant is Worker)
-                    {
-                        if (((Worker)Ant).Target)
-                        {
-                            ((Worker)Ant).Target = false;
-
-                            if (!((Worker)Ant).State)
-                            {
-                                ((Worker)Ant).State = true;
-                                El.Pieces--;
-                            }
-                        }
-                    }
-                    else if (Ant is Scout)
-                    {
-                        if (!((Scout)Ant).State)
-                        {
-                            ((Scout)Ant).State = true;
-                            El.Pieces--;
-                        }
-                    }
-                    break;
-                }
-            }
-
-            foreach (Queen El in App1.Queens)
-            {
-                if ((El.X - Ant.X) * (El.X - Ant.X) +
-                    (El.Y - Ant.Y) * (El.Y - Ant.Y) <=
-                    El.Radius * El.Radius)
-                {
-                    Ant.TriggerCol1 = true;
-
-                    Ant.Steps[0] = 0;
-
-                    if (!Ant.TriggerCol2)
-                    {
-                        if (Ant is Worker)
-                        {
-                            Ant.Vect = Ant.Vect - Math.PI;
-                        }
-                        else if (Ant is Scout)
-                        {
-                            Ant.Vect = Math.Atan2(Ant.Y - El.Y, Ant.X - El.X);
-                        }
-                        Ant.TriggerCol2 = true;
-                    }
-
-                    if (Ant is Worker)
-                    {
-                        if (!((Worker)Ant).Target)
-                        {
-                            ((Worker)Ant).Target = true;
-
-                            if (((Worker)Ant).State)
-                            {
-                                ((Worker)Ant).State = false;
-
-                                El.Health++;
-                                App1.Counter++;
-                            }
-                        }
-                    }
-                    else if (Ant is Scout)
-                    {
-                        if (((Scout)Ant).State)
-                        {
-                            ((Scout)Ant).State = false;
-
-                            El.Health++;
-                            App1.Counter++;
-                        }
-                    }
-                }
-            }
-            if (!Ant.TriggerCol1)
-            {
-                Ant.TriggerCol2 = false;
-            }
-            Ant.TriggerCol1 = false;
-        }
-        private void QueenCheck(Queen El) 
-        {
-            foreach (Queen Queen in App1.Queens)
-            {
-                if (Queen.Id != El.Id &&
-                    (Queen.X - El.X) * (Queen.X - El.X) +
-                    (Queen.Y - El.Y) * (Queen.Y - El.Y) <=
-                    (Queen.Radius + El.Radius) * (Queen.Radius + El.Radius))
-                {
-                    El.TriggerCol1 = true;
-
-                    if (!El.TriggerCol2)
-                    {
-                        El.Vect = Math.Atan2(El.Y - Queen.Y, El.X - Queen.X);
-
-                        El.TriggerCol2 = true;
-                    }
-                    break;
-                }
-            }
-            foreach (MovableFood MF in App1.MovableFoods)
-            {
-                if (MF.Id != El.Id && 
-                    (MF.X - El.X) * (MF.X - El.X) +
-                    (MF.Y - El.Y) * (MF.Y - El.Y) <=
-                    (MF.Radius + El.Radius) * (MF.Radius + El.Radius))
-                {
-                    El.TriggerCol1 = true;
-
-                    if (!El.TriggerCol2)
-                    {
-                        El.Vect = Math.Atan2(El.Y - MF.Y, El.X - MF.X);
-
-                        El.TriggerCol2 = true;
-                    }
-                    break;
-                }
-            }
-            if (!El.TriggerCol1)
-            {
-                El.TriggerCol2 = false;
-            }
-            El.TriggerCol1 = false;
-        }
-        private void MovableFoodCheck(MovableFood El)
-        {
-            foreach (Queen Queen in App1.Queens)
-            {
-                if (Queen.Id != El.Id && 
-                    (Queen.X - El.X) * (Queen.X - El.X) +
-                    (Queen.Y - El.Y) * (Queen.Y - El.Y) <=
-                    (Queen.Radius + El.Radius) * (Queen.Radius + El.Radius))
-                {
-                    El.TriggerCol1 = true;
-
-                    if (!El.TriggerCol2)
-                    {
-                        El.Vect = Math.Atan2(El.Y - Queen.Y, El.X - Queen.X);
-
-                        El.TriggerCol2 = true;
-                    }
-                    break;
-                }
-            }
-            foreach (MovableFood MF in App1.MovableFoods)
-            {
-                if (MF.Id != El.Id && 
-                    (MF.X - El.X) * (MF.X - El.X) +
-                    (MF.Y - El.Y) * (MF.Y - El.Y) <=
-                    (MF.Radius + El.Radius) * (MF.Radius + El.Radius))
-                {
-                    El.TriggerCol1 = true;
-
-                    if (!El.TriggerCol2)
-                    {
-                        El.Vect = Math.Atan2(El.Y - MF.Y, El.X - MF.X);
-
-                        El.TriggerCol2 = true;
-                    }
-                    break;
-                }
-            }
-            if (!El.TriggerCol1)
-            {
-                El.TriggerCol2 = false;
-            }
-            El.TriggerCol1 = false;
-        }
-        private void QueenGo(Queen Queen)
-        {
-            Queen.X += Math.Cos(Queen.Vect + (App1.Rnd.Next(6) - 3) * Math.PI / 180) * Queen.Speed;
-            Queen.Y += Math.Sin(Queen.Vect + (App1.Rnd.Next(6) - 3) * Math.PI / 180) * Queen.Speed;
-
-            if (Queen.X  + Queen.Radius > App1.Width - 2 || Queen.X - Queen.Radius < 1)
-            {
-                Queen.Vect = Math.PI - Queen.Vect;
-                Queen.X = Queen.X - Queen.Radius < 1 ? Queen.Radius + 1 :
-                                    App1.Width - Queen.Radius - 1;
-            }
-            if (Queen.Y  + Queen.Radius > App1.Height - 2 || Queen.Y - Queen.Radius < 1)
-            {
-                Queen.Vect = Math.PI * 2 - Queen.Vect;
-                Queen.Y = Queen.Y - Queen.Radius < 1 ? Queen.Radius + 1 : 
-                                    App1.Height - Queen.Radius - 1;
-            }
-        }
-        private void MovableFoodGo(MovableFood MovableFood)
-        {
-            MovableFood.X += Math.Cos(MovableFood.Vect + (App1.Rnd.Next(4) - 2) * Math.PI / 180) * MovableFood.Speed;
-            MovableFood.Y += Math.Sin(MovableFood.Vect + (App1.Rnd.Next(4) - 2) * Math.PI / 180) * MovableFood.Speed;
-
-            if (MovableFood.X + MovableFood.Radius > App1.Width - 1 || 
-                MovableFood.X - MovableFood.Radius < 1)
-            {
-                MovableFood.Vect = Math.PI - MovableFood.Vect;
-
-                MovableFood.X = MovableFood.X - MovableFood.Radius < 1 ? 
-                                    MovableFood.Radius + 1 :
-                                    App1.Width - MovableFood.Radius - 1;
-            }
-            if (MovableFood.Y + MovableFood.Radius > App1.Height - 1 || 
-                MovableFood.Y - MovableFood.Radius < 1)
-            {
-                MovableFood.Vect = Math.PI * 2 - MovableFood.Vect;
-
-                MovableFood.Y = MovableFood.Y - MovableFood.Radius < 1 ?
-                                    MovableFood.Radius + 1 :
-                                    App1.Height - MovableFood.Radius - 1;
-            }
-        }
-        private void PauseLoop1(object sender, object e)
-        {
-            App1.Rnd = new Random();
-
-            App1.Time.Restart();
-
-            UpdateAnts();
-            Draw();
-
-            App1.Time.Stop();
-
-            TextFPS1.Text = $"{App1.Time.ElapsedMilliseconds} ms | " +
-                            $"{1000 / (App1.Time.ElapsedMilliseconds < 1 ? 1 : App1.Time.ElapsedMilliseconds)} FPS";
-            TextCounter.Text = $"Count: {App1.Counter}";
-        }
-        private void MainLoop1(object sender, object e)
-        {
-            App1.Rnd = new Random();
-
-            App1.Time.Restart();
-
-            UpdateSize();
-            UpdateAnts();
-            if (App1.HealthButtonTrigger) UpdateBases();
-
-            Draw();
-
-            foreach (Ant Ant in App1.Ants) UpdateDir(Ant);
-
-            Parallel.ForEach(App1.Ants, Check);
-            Parallel.ForEach(App1.Ants, ChangeDir);
-            Parallel.ForEach(App1.Ants, Go);
-
-            App1.Mas.Clear();
-
-            App1.Time.Stop();
-
-            TextFPS1.Text = $"{App1.Time.ElapsedMilliseconds} ms | " +
-                            $"{1000 / (App1.Time.ElapsedMilliseconds < 1 ? 1 : App1.Time.ElapsedMilliseconds)} FPS";
-            TextCounter.Text = $"Count: {App1.Counter}";
-        }
-        private void Draw()
-        {
-            foreach (Ant Ant in App1.Ants)
-            {
-                Canvas.SetLeft(Ant.Ellipse, Ant.X - App1.AntRadius);
-                Canvas.SetTop(Ant.Ellipse, Ant.Y - App1.AntRadius);
+                Canvas.SetLeft(Ant.Ellipse, Ant.X - AntRadius);
+                Canvas.SetTop(Ant.Ellipse, Ant.Y - AntRadius);
 
                 if (Ant is Worker)
                 {
-                    Ant.Ellipse.Fill = ((Worker)Ant).Target ? App1.FoodColor : App1.HomeColor;
+                    Ant.Ellipse.Fill = ((Worker)Ant).Target ? FoodColor : HomeColor;
                 }
                 else if (Ant is Scout)
                 {
-                    Ant.Ellipse.Fill = ((Scout)Ant).State ? App1.HomeColor : App1.ScoutColor;
+                    Ant.Ellipse.Fill = ((Scout)Ant).State ? HomeColor : ScoutColor;
                 }
             }
-            foreach (Base Base in App1.Bases)
+            foreach (Base Base in Bases)
             {
                 Canvas.SetLeft(Base.Ellipse, Base.X - Base.Radius);
                 Canvas.SetTop(Base.Ellipse, Base.Y - Base.Radius);
             }
 
-            if (App1.ModeButtonTrigger) return;
+            if (ModeButtonTrigger) return;
 
-            foreach (Queen Queen in App1.Queens)
+            foreach (Queen Queen in Queens)
             {
                 Canvas.SetLeft(Queen.Ellipse, Queen.X - Queen.Radius);
                 Canvas.SetTop(Queen.Ellipse, Queen.Y - Queen.Radius);
             }
-            foreach (MovableFood MovableFood in App1.MovableFoods)
+            foreach (MovableFood MovableFood in MovableFoods)
             {
                 Canvas.SetLeft(MovableFood.Ellipse, MovableFood.X - MovableFood.Radius);
                 Canvas.SetTop(MovableFood.Ellipse, MovableFood.Y - MovableFood.Radius);
             }
         }
-        private void UpdateDir(Ant Ant)
+        protected void UpdateDir(Ant Ant)
         {
-            App1.Mas.Add(new double[5] {
+            Mas.Add(new double[5] {
                     Ant.X,
                     Ant.Y,
-                    Ant.Steps[0] + App1.SignalRadius,
-                    Ant.Steps[1] + App1.SignalRadius,
+                    Ant.Steps[0] + SignalRadius,
+                    Ant.Steps[1] + SignalRadius,
                     Ant.Id });
         }
-        private void Check(Ant Ant)
+        protected void Check(Ant Ant)
         {
-            foreach (Base El in App1.Bases)
+            foreach (Base El in Bases)
             {
                 if ((El.X - Ant.X) * (El.X - Ant.X) +
                     (El.Y - Ant.Y) * (El.Y - Ant.Y) <=
@@ -771,7 +289,7 @@ namespace AntsAI
                                     ((Worker)Ant).State = false;
 
                                     ((Home)El).Health++;
-                                    App1.Counter++;
+                                    Counter++;
                                 }
                             }
                         }
@@ -782,7 +300,7 @@ namespace AntsAI
                                 ((Scout)Ant).State = false;
 
                                 ((Home)El).Health++;
-                                App1.Counter++;
+                                Counter++;
                             }
                         }
                     }
@@ -832,17 +350,17 @@ namespace AntsAI
             }
             Ant.TriggerCol1 = false;
         }
-        private void ChangeDir(Ant Ant)
+        protected void ChangeDir(Ant Ant)
         {
             if (Ant.TriggerCol2) return;
 
-            foreach (double[] El in App1.Mas)
+            foreach (double[] El in Mas)
             {
                 if (Ant.Id != El[4])
                 {
                     if ((El[0] - Ant.X) * (El[0] - Ant.X) +
                         (El[1] - Ant.Y) * (El[1] - Ant.Y) <=
-                        App1.SignalRadius * App1.SignalRadius)
+                        SignalRadius * SignalRadius)
                     {
                         if (El[2] < Ant.Steps[0])
                         {
@@ -879,28 +397,28 @@ namespace AntsAI
                 }
             }
         }
-        private void Go(Ant Ant)
+        protected void Go(Ant Ant)
         {
-            Ant.X += Math.Cos(Ant.Vect + (App1.Rnd.Next(6) - 3) * Math.PI / 180) * Ant.Speed;
-            Ant.Y += Math.Sin(Ant.Vect + (App1.Rnd.Next(6) - 3) * Math.PI / 180) * Ant.Speed;
+            Ant.X += Math.Cos(Ant.Vect + (Rnd.Next(6) - 3) * Math.PI / 180) * Ant.Speed;
+            Ant.Y += Math.Sin(Ant.Vect + (Rnd.Next(6) - 3) * Math.PI / 180) * Ant.Speed;
 
-            if (Ant.X > App1.Width - 2 || Ant.X < 1)
+            if (Ant.X > Width - 2 || Ant.X < 1)
             {
                 Ant.Vect = Math.PI - Ant.Vect;
-                Ant.X = Ant.X < 1 ? 1 : App1.Width - 2;
+                Ant.X = Ant.X < 1 ? 1 : Width - 2;
             }
-            if (Ant.Y > App1.Height - 2 || Ant.Y < 1)
+            if (Ant.Y > Height - 2 || Ant.Y < 1)
             {
                 Ant.Vect = Math.PI * 2 - Ant.Vect;
-                Ant.Y = Ant.Y < 1 ? 1 : App1.Height - 2;
+                Ant.Y = Ant.Y < 1 ? 1 : Height - 2;
             }
 
             Ant.Steps[0]++;
             Ant.Steps[1]++;
         }
-        private void UpdateBases()
+        protected void UpdateBases()
         {
-            foreach (Base Base in App1.Bases)
+            foreach (Base Base in Bases)
             {
                 if (Base is Food)
                 {
@@ -908,7 +426,7 @@ namespace AntsAI
 
                     Base.Ellipse.Width = Base.Ellipse.Height = Base.Radius * 2;
 
-                    if (((Food)Base).Pieces == 0) MainCanvas.Children.Remove(Base.Ellipse);
+                    if (((Food)Base).Pieces == 0) ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Remove(Base.Ellipse);
                 }
                 else if (Base is Home)
                 {
@@ -918,111 +436,604 @@ namespace AntsAI
 
                     Base.Ellipse.Width = Base.Ellipse.Height = Base.Radius * 2;
 
-                    if (((Home)Base).Health == 0) MainCanvas.Children.Remove(Base.Ellipse);
+                    if (((Home)Base).Health == 0) ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Remove(Base.Ellipse);
                 }
             }
-            App1.Bases.RemoveAll((El) => El is Food ? ((Food)El).Pieces <= 0 : El is Home ? ((Home)El).Health <= 0 : false);
+            Bases.RemoveAll((El) => El is Food ? ((Food)El).Pieces <= 0 : El is Home ? ((Home)El).Health <= 0 : false);
         }
-        private void UpdateAnts()
+        protected void UpdateAnts()
         {
-            while (App1.Ants.Count < App1.AntsQuantity)
+            while (Ants.Count < AntsQuantity)
             {
-                int X = App1.Rnd.Next((int)MainCanvas.ActualWidth / 2) + (int)MainCanvas.ActualWidth / 4;
-                int Y = App1.Rnd.Next((int)MainCanvas.ActualHeight / 2) + (int)MainCanvas.ActualHeight / 4;
+                int X = Rnd.Next(Width / 2) + Width / 4;
+                int Y = Rnd.Next(Height / 2) + Height / 4;
 
-                int Target = App1.Rnd.Next(19);
+                int Target = Rnd.Next(19);
 
-                Ellipse EllipseAnt = new Ellipse() {
-                    Width = App1.AntRadius * 2,
-                    Height = App1.AntRadius * 2,
-                    Fill = Target < 9 ? App1.FoodColor : Target < 18 ? App1.HomeColor : App1.ScoutColor };
+                Ellipse EllipseAnt = new Ellipse()
+                {
+                    Width = AntRadius * 2,
+                    Height = AntRadius * 2,
+                    Fill = Target < 9 ? FoodColor : Target < 18 ? HomeColor : ScoutColor
+                };
 
-                MainCanvas.Children.Add(EllipseAnt);
+                ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Add(EllipseAnt);
 
-                if (Target < 9) App1.Ants.Add(new Worker(X, Y, false, EllipseAnt));
-                else if (Target < 18) App1.Ants.Add(new Worker(X, Y, true, EllipseAnt));
-                else if (Target < 19) App1.Ants.Add(new Scout(X, Y, EllipseAnt));
+                if (Target < 9) Ants.Add(new Worker(X, Y, false, EllipseAnt));
+
+                else if (Target < 18) Ants.Add(new Worker(X, Y, true, EllipseAnt));
+
+                else if (Target < 19) Ants.Add(new Scout(X, Y, EllipseAnt));
             }
-            while (App1.Ants.Count > App1.AntsQuantity)
+            while (Ants.Count > AntsQuantity)
             {
-                Ant Ant = App1.Ants[0];
+                Ant Ant = Ants[0];
 
-                MainCanvas.Children.Remove(Ant.Ellipse);
+                ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Remove(Ant.Ellipse);
 
-                App1.Ants.Remove(Ant);
+                Ants.Remove(Ant);
             }
-            if (App1.ModeButtonTrigger) AntsText1.Text = $"Max Ants: {App1.AntsQuantity} Ants: {App1.Ants.Count}";
-            else AntsText2.Text = $"Max Ants: {App1.AntsQuantity} Ants: {App1.Ants.Count}";
+            if (ModeButtonTrigger) ((MainWindow)Application.Current.MainWindow).AntsText1.Text = $"Max Ants: {AntsQuantity} Ants: {Ants.Count}";
+
+            else ((MainWindow)Application.Current.MainWindow).AntsText2.Text = $"Max Ants: {AntsQuantity} Ants: {Ants.Count}";
         }
-        private void AntsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        public void SpawnBase(Point p)
         {
-            App1.AntsQuantity = (int)((Slider)sender).Value;
-        }
-        private void RadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            int Value = (int)((Slider)sender).Value;
 
-            App1.BaseRadius = Value;
-
-            RadiusText.Text = $"Radius: {Value}";
-        }
-        private void MainCanvas_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!App1.ModeButtonTrigger) return;
-
-            Point p = e.GetPosition(this);
-
-            foreach (Base B in App1.Bases)
+            foreach (Base B in Bases)
             {
                 if (Math.Pow(B.X - p.X, 2) + Math.Pow(B.Y - p.Y, 2) <= Math.Pow(B.Radius, 2))
                 {
-                    MainCanvas.Children.Remove(B.Ellipse);
+                    ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Remove(B.Ellipse);
 
-                    App1.Bases.Remove(B);
+                    Bases.Remove(B);
 
                     return;
                 }
             }
             Ellipse EllipseBase = new Ellipse()
             {
-                Width = App1.BaseRadius * 2,
-                Height = App1.BaseRadius * 2,
-
-                Fill = App1.HomeButtonTrigger ? App1.HomeColor :
-                       App1.FoodButtonTrigger ? App1.FoodColor :
-                       App1.BorderColor
+                Width = BaseRadius * 2,
+                Height = BaseRadius * 2,
+                Fill = HomeButtonTrigger ? HomeColor :
+                       FoodButtonTrigger ? FoodColor :
+                       BorderColor
             };
 
-            if (App1.HomeButtonTrigger)
+            if (HomeButtonTrigger)
             {
-                App1.Bases.Add(
-                        new Home((int)p.X,
-                                 (int)p.Y,
-                                 App1.BaseRadius,
-                                 EllipseBase));
+                Bases.Add(new Home(p.X, p.Y,BaseRadius, EllipseBase));
             }
-            else if (App1.FoodButtonTrigger)
+            else if (FoodButtonTrigger)
             {
-                App1.Bases.Add(
-                        new Food((int)p.X,
-                                 (int)p.Y,
-                                 App1.BaseRadius,
-                                 EllipseBase));
+                Bases.Add(new Food(p.X, p.Y, BaseRadius,EllipseBase));
             }
-            else if (App1.BorderButtonTrigger)
+            else if (BorderButtonTrigger)
             {
-                App1.Bases.Add(
-                        new Border((int)p.X,
-                                   (int)p.Y,
-                                   App1.BaseRadius,
-                                   EllipseBase));
+                Bases.Add(new Border(p.X, p.Y, BaseRadius, EllipseBase));
             }
-            MainCanvas.Children.Add(EllipseBase);
 
-            Canvas.SetLeft(EllipseBase, p.X - App1.BaseRadius);
-            Canvas.SetTop(EllipseBase, p.Y - App1.BaseRadius);
+            ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Add(EllipseBase);
 
-            Canvas.SetZIndex(EllipseBase, -1);
+            Canvas.SetLeft(EllipseBase, p.X - BaseRadius);
+            Canvas.SetTop(EllipseBase, p.Y - BaseRadius);
+        }
+    }
+    class Mode1 : AntsAIGame
+    {
+        public Mode1() : base() { }
+        public void PauseLoop1(object sender, object e)
+        {
+            Rnd = new Random();
+
+            Time.Restart();
+
+            UpdateAnts();
+            Draw();
+
+            Time.Stop();
+
+            ((MainWindow)Application.Current.MainWindow).TextFPS1.Text = $"{Time.ElapsedMilliseconds} ms | " +
+                            $"{1000 / (Time.ElapsedMilliseconds < 1 ? 1 : Time.ElapsedMilliseconds)} FPS";
+            ((MainWindow)Application.Current.MainWindow).TextCounter.Text = $"Count: {Counter}";
+        }
+        public void MainLoop1(object sender, object e)
+        {
+            Rnd = new Random();
+
+            Time.Restart();
+
+            UpdateAnts();
+            if (HealthButtonTrigger) UpdateBases();
+
+            Draw();
+
+            foreach (Ant Ant in Ants) UpdateDir(Ant);
+
+            Parallel.ForEach(Ants, Check);
+            Parallel.ForEach(Ants, ChangeDir);
+            Parallel.ForEach(Ants, Go);
+
+            Mas.Clear();
+
+            Time.Stop();
+
+            ((MainWindow)Application.Current.MainWindow).TextFPS1.Text = $"{Time.ElapsedMilliseconds} ms | " +
+                            $"{1000 / (Time.ElapsedMilliseconds < 1 ? 1 : Time.ElapsedMilliseconds)} FPS";
+            ((MainWindow)Application.Current.MainWindow).TextCounter.Text = $"Count: {Counter}";
+        }
+    }
+    class Mode2 : AntsAIGame
+    {
+        private int _QueensQuantity;
+        public int QueensQuantity { get => _QueensQuantity; set => _QueensQuantity = value; }
+
+        private int _MovableFoodsQuantity;
+        public int MovableFoodsQuantity { get => _MovableFoodsQuantity; set => _MovableFoodsQuantity = value; }
+
+        private int _NewQueen;
+        public int NewQueen { get => _NewQueen; set => _NewQueen = value; }
+
+        public Mode2() : base()
+        {
+            _MovableFoodsQuantity = 10;
+            _QueensQuantity = 5;
+            _NewQueen = 400;
+        }
+        public void PauseLoop2(object sender, object e)
+        {
+            Rnd = new Random();
+
+            Time.Restart();
+
+            UpdateAnts();
+            UpdateBases();
+
+            CreateQueen();
+            SpawnMovableFood();
+
+            Draw();
+
+            Time.Stop();
+
+            ((MainWindow)Application.Current.MainWindow).TextFPS2.Text = $"{Time.ElapsedMilliseconds} ms | " +
+                            $"{1000 / (Time.ElapsedMilliseconds < 1 ? 1 : Time.ElapsedMilliseconds)} FPS";
+        }
+        public void MainLoop2(object sender, object e)
+        {
+            Rnd = new Random();
+
+            Time.Restart();
+
+            UpdateAnts();
+
+            UpdateMovableFoods();
+            SpawnMovableFood();
+
+            CreateQueen();
+            UpdateQueens();
+
+            Parallel.ForEach(Queens, UpdateQueenVect);
+
+            Draw();
+
+            foreach (Ant Ant in Ants) UpdateDir(Ant);
+
+            Parallel.ForEach(Ants, CheckMode2);
+            Parallel.ForEach(Queens, QueenCheck);
+            Parallel.ForEach(MovableFoods, MovableFoodCheck);
+
+            Parallel.ForEach(Ants, ChangeDir);
+
+            Parallel.ForEach(Ants, Go);
+            Parallel.ForEach(Queens, QueenGo);
+            Parallel.ForEach(MovableFoods, MovableFoodGo);
+
+            Mas.Clear();
+
+            Time.Stop();
+
+            ((MainWindow)Application.Current.MainWindow).TextFPS2.Text = $"{Time.ElapsedMilliseconds} ms | " +
+                            $"{1000 / (Time.ElapsedMilliseconds < 1 ? 1 : Time.ElapsedMilliseconds)} FPS";
+        }
+        protected void CreateQueen()
+        {
+            
+            while (Queens.Count > QueensQuantity)
+            {
+                ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Remove(Queens[0].Ellipse);
+                Queens.RemoveAt(0);
+            }
+            if (Queens.Count == 0)
+            {
+                Ellipse Ellipse = new Ellipse() { Width = BaseRadius, Height = BaseRadius, Fill = HomeColor };
+                Queen Queen = new Queen(Width / 2, Height / 2, Ellipse);
+
+                Queens.Add(Queen);
+
+                ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Add(Ellipse);
+
+                Canvas.SetLeft(Ellipse, Queen.X - 20);
+                Canvas.SetTop(Ellipse, Queen.Y - 20);
+            }
+            foreach (Ant Ant in Ants)
+            {
+                if (Ant.Steps[0] > NewQueen && Queens.Count < QueensQuantity)
+                {
+                    Ellipse Ellipse = new Ellipse() { Width = 40, Height = 40, Fill = HomeColor };
+
+                    Queens.Add(new Queen(Ant.X, Ant.Y, Ellipse));
+
+                    ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Add(Ellipse);
+                    ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Remove(Ant.Ellipse);
+                }
+            }
+            Ants.RemoveAll((El) => El.Steps[0] > 500);
+
+            ((MainWindow)Application.Current.MainWindow).QueensText.Text = $"Max Queens: {QueensQuantity} Queens: {Queens.Count}";
+        }
+        protected void UpdateMovableFoods()
+        {
+            foreach (MovableFood MovableFood in MovableFoods)
+            {
+                MovableFood.Radius = MovableFood.Pieces / 20;
+
+                MovableFood.Ellipse.Width = MovableFood.Ellipse.Height = MovableFood.Radius * 2;
+
+                if (MovableFood.Pieces <= 0) ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Remove(MovableFood.Ellipse);
+            }
+            MovableFoods.RemoveAll((El) => El.Pieces <= 0);
+        }
+        protected void UpdateQueens()
+        {
+            foreach (Queen Queen in Queens)
+            {
+                Queen.Health--;
+
+                Queen.Radius = Queen.Health / 20;
+
+                Queen.Ellipse.Width = Queen.Ellipse.Height = Queen.Radius * 2;
+
+                if (Queen.Health <= 0) ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Remove(Queen.Ellipse);
+            }
+            Queens.RemoveAll((El) => El.Health <= 0);
+        }
+        protected void SpawnMovableFood()
+        {
+            while (MovableFoods.Count < MovableFoodsQuantity)
+            {
+
+                Ellipse Ellipse = new Ellipse { Width = BaseRadius, Height = BaseRadius, Fill = FoodColor };
+
+                MovableFoods.Add(new MovableFood(
+                                        Rnd.Next(Width - 48) + 24,
+                                        Rnd.Next(Height - 48) + 24,
+                                        Ellipse));
+                ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Add(Ellipse);
+            }
+            while (MovableFoods.Count > MovableFoodsQuantity)
+            {
+                ((MainWindow)Application.Current.MainWindow).MainCanvas.Children.Remove(MovableFoods[0].Ellipse);
+                MovableFoods.RemoveAt(0);
+            }
+
+            ((MainWindow)Application.Current.MainWindow).MovableFoodsText.Text = $"Food: {MovableFoodsQuantity}";
+        }
+        protected void UpdateQueenVect(Queen Queen)
+        {
+            double Len = 0;
+
+            double X = Width / 2;
+            double Y = Height / 2;
+
+            foreach (MovableFood El in MovableFoods)
+            {
+                double Len1 = (Queen.X - El.X) * (Queen.X - El.X) + (Queen.Y - El.Y) * (Queen.Y - El.Y);
+
+                if (Len1 > Len)
+                {
+                    Len = Len1;
+                    X = El.X;
+                    Y = El.Y;
+                }
+            }
+            if (Len != 10000) Queen.Vect = Math.Atan2(Y - Queen.Y, X - Queen.X);
+        }
+        protected void CheckMode2(Ant Ant)
+        {
+            foreach (MovableFood El in MovableFoods)
+            {
+                if ((El.X - Ant.X) * (El.X - Ant.X) +
+                    (El.Y - Ant.Y) * (El.Y - Ant.Y) <=
+                    El.Radius * El.Radius)
+                {
+                    Ant.TriggerCol1 = true;
+
+                    if (!Ant.TriggerCol2)
+                    {
+                        Ant.Vect = Ant.Vect - Math.PI;
+                        Ant.Steps[1] = 0;
+
+                        Ant.TriggerCol2 = true;
+                    }
+
+                    if (Ant is Worker)
+                    {
+                        if (((Worker)Ant).Target)
+                        {
+                            ((Worker)Ant).Target = false;
+
+                            if (!((Worker)Ant).State)
+                            {
+                                ((Worker)Ant).State = true;
+                                El.Pieces--;
+                            }
+                        }
+                    }
+                    else if (Ant is Scout)
+                    {
+                        if (!((Scout)Ant).State)
+                        {
+                            ((Scout)Ant).State = true;
+                            El.Pieces--;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            foreach (Queen El in Queens)
+            {
+                if ((El.X - Ant.X) * (El.X - Ant.X) +
+                    (El.Y - Ant.Y) * (El.Y - Ant.Y) <=
+                    El.Radius * El.Radius)
+                {
+                    Ant.TriggerCol1 = true;
+
+                    Ant.Steps[0] = 0;
+
+                    if (!Ant.TriggerCol2)
+                    {
+                        if (Ant is Worker)
+                        {
+                            Ant.Vect = Ant.Vect - Math.PI;
+                        }
+                        else if (Ant is Scout)
+                        {
+                            Ant.Vect = Math.Atan2(Ant.Y - El.Y, Ant.X - El.X);
+                        }
+                        Ant.TriggerCol2 = true;
+                    }
+
+                    if (Ant is Worker)
+                    {
+                        if (!((Worker)Ant).Target)
+                        {
+                            ((Worker)Ant).Target = true;
+
+                            if (((Worker)Ant).State)
+                            {
+                                ((Worker)Ant).State = false;
+
+                                El.Health++;
+                                Counter++;
+                            }
+                        }
+                    }
+                    else if (Ant is Scout)
+                    {
+                        if (((Scout)Ant).State)
+                        {
+                            ((Scout)Ant).State = false;
+
+                            El.Health++;
+                            Counter++;
+                        }
+                    }
+                }
+            }
+            if (!Ant.TriggerCol1)
+            {
+                Ant.TriggerCol2 = false;
+            }
+            Ant.TriggerCol1 = false;
+        }
+        protected void QueenCheck(Queen El)
+        {
+            foreach (Queen Queen in Queens)
+            {
+                if (Queen.Id != El.Id &&
+                    (Queen.X - El.X) * (Queen.X - El.X) +
+                    (Queen.Y - El.Y) * (Queen.Y - El.Y) <=
+                    (Queen.Radius + El.Radius) * (Queen.Radius + El.Radius))
+                {
+                    El.TriggerCol1 = true;
+
+                    if (!El.TriggerCol2)
+                    {
+                        El.Vect = Math.Atan2(El.Y - Queen.Y, El.X - Queen.X);
+
+                        El.TriggerCol2 = true;
+                    }
+                    break;
+                }
+            }
+            foreach (MovableFood MF in MovableFoods)
+            {
+                if (MF.Id != El.Id &&
+                    (MF.X - El.X) * (MF.X - El.X) +
+                    (MF.Y - El.Y) * (MF.Y - El.Y) <=
+                    (MF.Radius + El.Radius) * (MF.Radius + El.Radius))
+                {
+                    El.TriggerCol1 = true;
+
+                    if (!El.TriggerCol2)
+                    {
+                        El.Vect = Math.Atan2(El.Y - MF.Y, El.X - MF.X);
+
+                        El.TriggerCol2 = true;
+                    }
+                    break;
+                }
+            }
+            if (!El.TriggerCol1)
+            {
+                El.TriggerCol2 = false;
+            }
+            El.TriggerCol1 = false;
+        }
+        protected void MovableFoodCheck(MovableFood El)
+        {
+            foreach (Queen Queen in Queens)
+            {
+                if (Queen.Id != El.Id &&
+                    (Queen.X - El.X) * (Queen.X - El.X) +
+                    (Queen.Y - El.Y) * (Queen.Y - El.Y) <=
+                    (Queen.Radius + El.Radius) * (Queen.Radius + El.Radius))
+                {
+                    El.TriggerCol1 = true;
+
+                    if (!El.TriggerCol2)
+                    {
+                        El.Vect = Math.Atan2(El.Y - Queen.Y, El.X - Queen.X);
+
+                        El.TriggerCol2 = true;
+                    }
+                    break;
+                }
+            }
+            foreach (MovableFood MF in MovableFoods)
+            {
+                if (MF.Id != El.Id &&
+                    (MF.X - El.X) * (MF.X - El.X) +
+                    (MF.Y - El.Y) * (MF.Y - El.Y) <=
+                    (MF.Radius + El.Radius) * (MF.Radius + El.Radius))
+                {
+                    El.TriggerCol1 = true;
+
+                    if (!El.TriggerCol2)
+                    {
+                        El.Vect = Math.Atan2(El.Y - MF.Y, El.X - MF.X);
+
+                        El.TriggerCol2 = true;
+                    }
+                    break;
+                }
+            }
+            if (!El.TriggerCol1)
+            {
+                El.TriggerCol2 = false;
+            }
+            El.TriggerCol1 = false;
+        }
+        protected void QueenGo(Queen Queen)
+        {
+            Queen.X += Math.Cos(Queen.Vect + (Rnd.Next(6) - 3) * Math.PI / 180) * Queen.Speed;
+            Queen.Y += Math.Sin(Queen.Vect + (Rnd.Next(6) - 3) * Math.PI / 180) * Queen.Speed;
+
+            if (Queen.X + Queen.Radius > Width - 2 || Queen.X - Queen.Radius < 1)
+            {
+                Queen.Vect = Math.PI - Queen.Vect;
+                Queen.X = Queen.X - Queen.Radius < 1 ? Queen.Radius + 1 : Width - Queen.Radius - 1;
+            }
+            if (Queen.Y + Queen.Radius > Height - 2 || Queen.Y - Queen.Radius < 1)
+            {
+                Queen.Vect = Math.PI * 2 - Queen.Vect;
+                Queen.Y = Queen.Y - Queen.Radius < 1 ? Queen.Radius + 1 : Height - Queen.Radius - 1;
+            }
+        }
+        protected void MovableFoodGo(MovableFood MovableFood)
+        {
+            MovableFood.X += Math.Cos(MovableFood.Vect + (Rnd.Next(4) - 2) * Math.PI / 180) * MovableFood.Speed;
+            MovableFood.Y += Math.Sin(MovableFood.Vect + (Rnd.Next(4) - 2) * Math.PI / 180) * MovableFood.Speed;
+
+            if (MovableFood.X + MovableFood.Radius > Width - 1 ||
+                MovableFood.X - MovableFood.Radius < 1)
+            {
+                MovableFood.Vect = Math.PI - MovableFood.Vect;
+
+                MovableFood.X = MovableFood.X - MovableFood.Radius < 1 ?
+                                    MovableFood.Radius + 1 :
+                                    Width - MovableFood.Radius - 1;
+            }
+            if (MovableFood.Y + MovableFood.Radius > Height - 1 ||
+                MovableFood.Y - MovableFood.Radius < 1)
+            {
+                MovableFood.Vect = Math.PI * 2 - MovableFood.Vect;
+
+                MovableFood.Y = MovableFood.Y - MovableFood.Radius < 1 ?
+                                    MovableFood.Radius + 1 :
+                                    Height - MovableFood.Radius - 1;
+            }
+        }
+    }
+    public partial class MainWindow : Window
+    {
+        private AntsAIGame Game = new AntsAIGame();
+
+        public Random Rnd = new Random();
+        public MainWindow()
+        {
+            InitializeComponent();
+
+            ChangeMode();
+        }
+        private void ChangeMode()
+        {
+            AntsAIGame.Timer.Stop();
+
+            MainCanvas.Children.Clear();
+
+            AntsAIGame.Timer = new DispatcherTimer();
+
+            AntsAIGame.Timer.Interval = TimeSpan.FromMilliseconds(20);
+
+            AntsAIGame.Timer.Tick += UpdateSize;
+
+            if (AntsAIGame.ModeButtonTrigger)
+            {
+                Game = new Mode1();
+
+                AntsAIGame.Timer.Tick += ((Mode1)Game).PauseLoop1;
+
+                AntsSlider.Value = Game.AntsQuantity;
+                RadiusSlider.Value = Game.BaseRadius;
+
+                Mode2Grid.Visibility = Visibility.Collapsed;
+                Mode1Grid.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                Game = new Mode2();
+
+                AntsAIGame.Timer.Tick += ((Mode2)Game).PauseLoop2;
+
+                AntsSlider2.Value = Game.AntsQuantity;
+                QueensSlider.Value = ((Mode2)Game).QueensQuantity;
+                NewQueenSlider.Value = ((Mode2)Game).NewQueen;
+                MovableFoodsSlider.Value = ((Mode2)Game).MovableFoodsQuantity;
+
+                Mode1Grid.Visibility = Visibility.Collapsed;
+                Mode2Grid.Visibility = Visibility.Visible;
+            }
+
+            AntsAIGame.Timer.Start();
+        }
+        private void AntsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            Game.AntsQuantity = (int)((Slider)sender).Value;
+        }
+        private void RadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            int Value = (int)((Slider)sender).Value;
+
+            Game.BaseRadius = Value;
+
+            RadiusText.Text = $"Radius: {Value}";
+        }
+        private void MainCanvas_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (AntsAIGame.ModeButtonTrigger) Game.SpawnBase(e.GetPosition(this));
         }
         private void BaseButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1030,98 +1041,106 @@ namespace AntsAI
             {
                 case "Home":
 
-                    App1.HomeButtonTrigger = true;
-                    App1.FoodButtonTrigger = false;
-                    App1.BorderButtonTrigger = false;
+                    Game.HomeButtonTrigger = true;
+                    Game.FoodButtonTrigger = false;
+                    Game.BorderButtonTrigger = false;
 
                     break;
 
                 case "Food":
 
-                    App1.HomeButtonTrigger = false;
-                    App1.FoodButtonTrigger = true;
-                    App1.BorderButtonTrigger = false;
+                    Game.HomeButtonTrigger = false;
+                    Game.FoodButtonTrigger = true;
+                    Game.BorderButtonTrigger = false;
 
                     break;
 
                 case "Border":
 
-                    App1.HomeButtonTrigger = false;
-                    App1.FoodButtonTrigger = false;
-                    App1.BorderButtonTrigger = true;
+                    Game.HomeButtonTrigger = false;
+                    Game.FoodButtonTrigger = false;
+                    Game.BorderButtonTrigger = true;
 
                     break;
             }
         }
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
-            if (App1.StartButtonTrigger)
+            if (Game.StartButtonTrigger)
             {
-                if (App1.ModeButtonTrigger)
+                if (AntsAIGame.ModeButtonTrigger)
                 {
-                    App1.Timer.Tick -= PauseLoop1;
-                    App1.Timer.Tick += MainLoop1;
+                    AntsAIGame.Timer.Tick -= ((Mode1)Game).PauseLoop1;
+                    AntsAIGame.Timer.Tick += ((Mode1)Game).MainLoop1;
                 }
                 else
                 {
-                    App1.Timer.Tick -= PauseLoop2;
-                    App1.Timer.Tick += MainLoop2;
+                    AntsAIGame.Timer.Tick -= ((Mode2)Game).PauseLoop2;
+                    AntsAIGame.Timer.Tick += ((Mode2)Game).MainLoop2;
                 }
 
-                App1.StartButtonTrigger = false;
+                Game.StartButtonTrigger = false;
             }
             else
             {
-                if (App1.ModeButtonTrigger)
+                if (AntsAIGame.ModeButtonTrigger)
                 {
-                    App1.Timer.Tick -= MainLoop1;
-                    App1.Timer.Tick += PauseLoop1;
+                    AntsAIGame.Timer.Tick -= ((Mode1)Game).MainLoop1;
+                    AntsAIGame.Timer.Tick += ((Mode1)Game).PauseLoop1;
                 }
                 else
                 {
-                    App1.Timer.Tick -= MainLoop2;
-                    App1.Timer.Tick += PauseLoop2;
+                    AntsAIGame.Timer.Tick -= ((Mode2)Game).MainLoop2;
+                    AntsAIGame.Timer.Tick += ((Mode2)Game).PauseLoop2;
                 }
 
-                App1.StartButtonTrigger = true;
+                Game.StartButtonTrigger = true;
             }
         }
         private void ModeButton_Click(object sender, RoutedEventArgs e)
         {
-            if (App1.StartButtonTrigger) StartButton_Click(null, null);
+            if (Game.StartButtonTrigger) StartButton_Click(null, null);
 
-            App1.ModeButtonTrigger = !App1.ModeButtonTrigger;
+            AntsAIGame.ModeButtonTrigger = !AntsAIGame.ModeButtonTrigger;
 
             ChangeMode();
         }
         private void HealthButton_Click(object sender, RoutedEventArgs e)
         {
-            App1.HealthButtonTrigger = !App1.HealthButtonTrigger;
-
-            foreach (Base Base in App1.Bases)
+            if (AntsAIGame.ModeButtonTrigger)
             {
-                if (Base is Home) ((Home)Base).Health = 10 * (int)Base.Ellipse.Width / 2;
+                Game.HealthButtonTrigger = !Game.HealthButtonTrigger;
 
-                else if (Base is Food) ((Food)Base).Pieces = 10 * (int)Base.Ellipse.Width / 2;
+                foreach (Base Base in Game.Bases)
+                {
+                    if (Base is Home) ((Home)Base).Health = 10 * (int)Base.Ellipse.Width / 2;
+
+                    else if (Base is Food) ((Food)Base).Pieces = 10 * (int)Base.Ellipse.Width / 2;
+                }
             }
         }
-        private void UpdateSize()
+        private void UpdateSize(object sender, object e)
         {
-            App1.Width = (int)MainCanvas.ActualWidth;
-            App1.Height = (int)MainCanvas.ActualHeight;
+            AntsAIGame.Width = (int)MainCanvas.ActualWidth;
+            AntsAIGame.Height = (int)MainCanvas.ActualHeight;
         }
         private void QueensSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            App1.QueensQuantity = (int)((Slider)sender).Value;
+            if (!AntsAIGame.ModeButtonTrigger) ((Mode2)Game).QueensQuantity = (int)((Slider)sender).Value;
         }
         private void MovableFoodsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            App1.MovableFoodsQuantity = (int)((Slider)sender).Value;
+            if (!AntsAIGame.ModeButtonTrigger) ((Mode2)Game).MovableFoodsQuantity = (int)((Slider)sender).Value;
         }
         private void NewQueenSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            App1.NewQueen = (int)((Slider)sender).Value;
-            NewQueenText.Text = $"Steps to Queen: {App1.NewQueen}";
+
+            if (!AntsAIGame.ModeButtonTrigger)
+            {
+                ((Mode2)Game).NewQueen = (int)((Slider)sender).Value;
+
+                NewQueenText.Text = $"Steps to Queen: {((Mode2)Game).NewQueen}";
+            }
         }
     }
 }

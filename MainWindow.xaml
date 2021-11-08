@@ -31,7 +31,7 @@
                            TextWrapping="Wrap" TextAlignment="Center"
                            FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
                 <Slider    x:Name="AntsSlider" Grid.Row="1" Width ="150" Height="25" 
-                           Minimum="1" Maximum="3500" Value="1500" ValueChanged="AntsSlider_ValueChanged"/>
+                           Minimum="1" Maximum="5000" Value="1500" ValueChanged="AntsSlider_ValueChanged"/>
                 <TextBlock x:Name="RadiusText" Grid.Row="2" Text="Radius: 40" VerticalAlignment="Center" HorizontalAlignment="Center" 
                            FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
                 <Slider x:Name="RadiusSlider" Grid.Row="3" Width ="150" Height="25" 
@@ -71,7 +71,7 @@
                            TextWrapping="Wrap" TextAlignment="Center"
                            FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
                 <Slider    x:Name="AntsSlider2" Grid.Row="1" Width ="150" Height="25" 
-                           Minimum="1" Maximum="3500" Value="1500" ValueChanged="AntsSlider_ValueChanged"/>
+                           Minimum="1" Maximum="5000" Value="1500" ValueChanged="AntsSlider_ValueChanged"/>
                 <TextBlock x:Name="QueensText" Grid.Row="2" Text="Max Queens: 5 Queens: 1" VerticalAlignment="Center" HorizontalAlignment="Center" 
                            TextWrapping="Wrap" TextAlignment="Center" 
                            FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
