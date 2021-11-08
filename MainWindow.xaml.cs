@@ -1,21 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
+//спавн и смерть муравьёв
+//сделать инструкцию
+//сделать чтобы королевы держались подальше друг от друга
 namespace AntsAI
 {
     abstract class Movable
@@ -96,7 +92,7 @@ namespace AntsAI
         {
             _Health = 400;
             _Radius = 20;
-            _Speed = 1.5;
+            _Speed = App1.Rnd.NextDouble() + 0.2;
         }
     }
     class MovableFood : Movable
@@ -170,7 +166,10 @@ namespace AntsAI
         public static List<double[]> Mas = new List<double[]>();
 
         public static int AntsQuantity = 1500;
-        public static int AntRadius = 2;
+        public static int QueensQuantity = 5;
+        public static int MovableFoodsQuantity = 10;
+        public static int NewQueen = 400;
+        public static double AntRadius = 1.5;
         public static int BaseRadius = 40;
         public static int SignalRadius = 32;
 
@@ -186,12 +185,11 @@ namespace AntsAI
         public static bool HealthButtonTrigger = false;
         public static bool ModeButtonTrigger = true;
 
-        public static SolidColorBrush Blue = new SolidColorBrush(Color.FromRgb(81, 77, 255));
-        public static SolidColorBrush Gray = new SolidColorBrush(Color.FromRgb(112, 128, 144));
-        public static SolidColorBrush DarkGray = new SolidColorBrush(Color.FromRgb(144, 160, 176));
-        public static SolidColorBrush Red = new SolidColorBrush(Color.FromRgb(255, 67, 67));
+        public static SolidColorBrush HomeColor = new SolidColorBrush(Color.FromRgb(81, 77, 255));
+        public static SolidColorBrush BorderColor = new SolidColorBrush(Color.FromRgb(112, 128, 144));
+        public static SolidColorBrush ScoutColor = new SolidColorBrush(Color.FromRgb(28, 28, 56));
+        public static SolidColorBrush FoodColor = new SolidColorBrush(Color.FromRgb(255, 67, 67));
         public static SolidColorBrush White = new SolidColorBrush(Color.FromRgb(226, 226, 226));
-        public static SolidColorBrush Purple = new SolidColorBrush(Color.FromRgb(66, 66, 99));
 
         public static Random Rnd = new Random();
         public static DispatcherTimer Timer = new DispatcherTimer();
@@ -204,11 +202,7 @@ namespace AntsAI
         {
             InitializeComponent();
 
-            App1.Timer.Interval = TimeSpan.FromMilliseconds(10);
-
-            App1.Timer.Tick += PauseLoop1;
-
-            App1.Timer.Start();
+            ChangeMode();
         }
         private void ChangeMode()
         {
@@ -223,9 +217,12 @@ namespace AntsAI
             MainCanvas.Children.Clear();
 
             App1.AntsQuantity = 1500;
+            App1.QueensQuantity = 5;
+            App1.MovableFoodsQuantity = 10;
+            App1.NewQueen = 400;
             App1.Counter = 0;
 
-            App1.HomeButtonTrigger = false;
+            App1.HomeButtonTrigger = true;
             App1.FoodButtonTrigger = false;
             App1.BorderButtonTrigger = false;
             App1.StartButtonTrigger = true;
@@ -264,11 +261,15 @@ namespace AntsAI
             UpdateAnts();
             UpdateBases();
 
+            CreateQueen();
+            SpawnMovableFood();
+
             Draw();
 
             App1.Time.Stop();
 
-            TextFPS2.Text = $"{1000 / (App1.Time.ElapsedMilliseconds + 1)} fps";
+            TextFPS2.Text = $"{App1.Time.ElapsedMilliseconds} ms | " +
+                            $"{1000 / (App1.Time.ElapsedMilliseconds < 1 ? 1 : App1.Time.ElapsedMilliseconds)} FPS";
         }
         private void MainLoop2(object sender, object e)
         {
@@ -306,15 +307,35 @@ namespace AntsAI
 
             App1.Time.Stop();
 
-            TextFPS2.Text = $"{1000 / (App1.Time.ElapsedMilliseconds + 1)} fps";
+            TextFPS2.Text = $"{App1.Time.ElapsedMilliseconds} ms | " +
+                            $"{1000 / (App1.Time.ElapsedMilliseconds < 1 ? 1 : App1.Time.ElapsedMilliseconds)} FPS";
         }
         private void CreateQueen()
         {
+            while (App1.Queens.Count > App1.QueensQuantity)
+            {
+                MainCanvas.Children.Remove(App1.Queens[0].Ellipse);
+                App1.Queens.RemoveAt(0);
+            }
+            if (App1.Queens.Count == 0)
+            {
+                Ellipse Ellipse = new Ellipse() { Width = 40, Height = 40, Fill = App1.HomeColor };
+                Queen Queen = new Queen((int)MainCanvas.ActualWidth / 2,
+                                        (int)MainCanvas.ActualHeight / 2,
+                                        Ellipse);
+
+                App1.Queens.Add(Queen);
+
+                MainCanvas.Children.Add(Ellipse);
+
+                Canvas.SetLeft(Ellipse, Queen.X - 20);
+                Canvas.SetTop(Ellipse, Queen.Y - 20);
+            }
             foreach (Ant Ant in App1.Ants)
             {
-                if (Ant.Steps[0] > 500 && App1.Queens.Count < 5)
+                if (Ant.Steps[0] > App1.NewQueen && App1.Queens.Count < App1.QueensQuantity)
                 {
-                    Ellipse Ellipse = new Ellipse() { Width = 40, Height = 40, Fill = App1.Blue };
+                    Ellipse Ellipse = new Ellipse() { Width = 40, Height = 40, Fill = App1.HomeColor };
 
                     App1.Queens.Add(new Queen(Ant.X, Ant.Y, Ellipse));
 
@@ -323,6 +344,8 @@ namespace AntsAI
                 }
             }
             App1.Ants.RemoveAll((El) => El.Steps[0] > 500);
+
+            QueensText.Text = $"Max Queens: {App1.QueensQuantity} Queens: {App1.Queens.Count}";
         }
         private void UpdateMovableFoods()
         {
@@ -349,28 +372,13 @@ namespace AntsAI
                 if (Queen.Health <= 0) MainCanvas.Children.Remove(Queen.Ellipse);
             }
             App1.Queens.RemoveAll((El) => El.Health <= 0);
-
-            if (App1.Queens.Count == 0)
-            {
-                Ellipse Ellipse = new Ellipse() { Width = 40, Height = 40, Fill = App1.Blue };
-                Queen Queen = new Queen((int)MainCanvas.ActualWidth / 2,
-                                        (int)MainCanvas.ActualHeight / 2,
-                                        Ellipse);
-
-                App1.Queens.Add(Queen);
-
-                MainCanvas.Children.Add(Ellipse);
-
-                Canvas.SetLeft(Ellipse, Queen.X - 20);
-                Canvas.SetTop(Ellipse, Queen.Y - 20);
-            }
         }
         private void SpawnMovableFood()
         {
-            while (App1.MovableFoods.Count < 10)
+            while (App1.MovableFoods.Count < App1.MovableFoodsQuantity)
             { 
 
-                Ellipse Ellipse = new Ellipse { Width = 40, Height = 40, Fill = App1.Red };
+                Ellipse Ellipse = new Ellipse { Width = 40, Height = 40, Fill = App1.FoodColor };
 
                 App1.MovableFoods.Add(new MovableFood(
                                         App1.Rnd.Next(App1.Width - 48) + 24, 
@@ -378,6 +386,13 @@ namespace AntsAI
                                         Ellipse));
                 MainCanvas.Children.Add(Ellipse);
             }
+            while (App1.MovableFoods.Count > App1.MovableFoodsQuantity)
+            {
+                MainCanvas.Children.Remove(App1.MovableFoods[0].Ellipse);
+                App1.MovableFoods.RemoveAt(0);
+            }
+
+            MovableFoodsText.Text = $"Food: {App1.MovableFoodsQuantity}";
         }
         private void UpdateQueenVect(Queen Queen)
         {
@@ -557,7 +572,7 @@ namespace AntsAI
 
                         El.TriggerCol2 = true;
                     }
-                    //break;
+                    break;
                 }
             }
             foreach (MovableFood MF in App1.MovableFoods)
@@ -575,7 +590,7 @@ namespace AntsAI
 
                         El.TriggerCol2 = true;
                     }
-                    //break;
+                    break;
                 }
             }
             if (!El.TriggerCol1)
@@ -586,8 +601,8 @@ namespace AntsAI
         }
         private void QueenGo(Queen Queen)
         {
-            Queen.X += (Math.Cos(Queen.Vect) * Queen.Speed + (App1.Rnd.Next(4) - 2) * Math.PI / 180);
-            Queen.Y += (Math.Sin(Queen.Vect) * Queen.Speed + (App1.Rnd.Next(4) - 2) * Math.PI / 180);
+            Queen.X += Math.Cos(Queen.Vect + (App1.Rnd.Next(6) - 3) * Math.PI / 180) * Queen.Speed;
+            Queen.Y += Math.Sin(Queen.Vect + (App1.Rnd.Next(6) - 3) * Math.PI / 180) * Queen.Speed;
 
             if (Queen.X  + Queen.Radius > App1.Width - 2 || Queen.X - Queen.Radius < 1)
             {
@@ -604,10 +619,10 @@ namespace AntsAI
         }
         private void MovableFoodGo(MovableFood MovableFood)
         {
-            MovableFood.X += (Math.Cos(MovableFood.Vect) * MovableFood.Speed + (App1.Rnd.Next(4) - 2) * Math.PI / 180);
-            MovableFood.Y += (Math.Sin(MovableFood.Vect) * MovableFood.Speed + (App1.Rnd.Next(4) - 2) * Math.PI / 180);
+            MovableFood.X += Math.Cos(MovableFood.Vect + (App1.Rnd.Next(4) - 2) * Math.PI / 180) * MovableFood.Speed;
+            MovableFood.Y += Math.Sin(MovableFood.Vect + (App1.Rnd.Next(4) - 2) * Math.PI / 180) * MovableFood.Speed;
 
-            if (MovableFood.X + MovableFood.Radius > App1.Width - 2 || 
+            if (MovableFood.X + MovableFood.Radius > App1.Width - 1 || 
                 MovableFood.X - MovableFood.Radius < 1)
             {
                 MovableFood.Vect = Math.PI - MovableFood.Vect;
@@ -616,7 +631,7 @@ namespace AntsAI
                                     MovableFood.Radius + 1 :
                                     App1.Width - MovableFood.Radius - 1;
             }
-            if (MovableFood.Y + MovableFood.Radius > App1.Height - 2 || 
+            if (MovableFood.Y + MovableFood.Radius > App1.Height - 1 || 
                 MovableFood.Y - MovableFood.Radius < 1)
             {
                 MovableFood.Vect = Math.PI * 2 - MovableFood.Vect;
@@ -637,8 +652,9 @@ namespace AntsAI
 
             App1.Time.Stop();
 
-            TextFPS1.Text = $"{1000 / (App1.Time.ElapsedMilliseconds + 1)} fps";
-            TextCounter.Text = $"Counter: {App1.Counter}";
+            TextFPS1.Text = $"{App1.Time.ElapsedMilliseconds} ms | " +
+                            $"{1000 / (App1.Time.ElapsedMilliseconds < 1 ? 1 : App1.Time.ElapsedMilliseconds)} FPS";
+            TextCounter.Text = $"Count: {App1.Counter}";
         }
         private void MainLoop1(object sender, object e)
         {
@@ -646,6 +662,7 @@ namespace AntsAI
 
             App1.Time.Restart();
 
+            UpdateSize();
             UpdateAnts();
             if (App1.HealthButtonTrigger) UpdateBases();
 
@@ -661,8 +678,9 @@ namespace AntsAI
 
             App1.Time.Stop();
 
-            TextFPS1.Text = $"{1000 / (App1.Time.ElapsedMilliseconds + 1)} fps";
-            TextCounter.Text = $"Counter: {App1.Counter}";
+            TextFPS1.Text = $"{App1.Time.ElapsedMilliseconds} ms | " +
+                            $"{1000 / (App1.Time.ElapsedMilliseconds < 1 ? 1 : App1.Time.ElapsedMilliseconds)} FPS";
+            TextCounter.Text = $"Count: {App1.Counter}";
         }
         private void Draw()
         {
@@ -673,11 +691,11 @@ namespace AntsAI
 
                 if (Ant is Worker)
                 {
-                    Ant.Ellipse.Fill = ((Worker)Ant).Target ? App1.Red : App1.Blue;
+                    Ant.Ellipse.Fill = ((Worker)Ant).Target ? App1.FoodColor : App1.HomeColor;
                 }
                 else if (Ant is Scout)
                 {
-                    Ant.Ellipse.Fill = ((Scout)Ant).State ? App1.Blue : App1.DarkGray;
+                    Ant.Ellipse.Fill = ((Scout)Ant).State ? App1.HomeColor : App1.ScoutColor;
                 }
             }
             foreach (Base Base in App1.Bases)
@@ -863,18 +881,18 @@ namespace AntsAI
         }
         private void Go(Ant Ant)
         {
-            Ant.X += (Math.Cos(Ant.Vect) * Ant.Speed + (App1.Rnd.Next(4) - 2) * Math.PI / 180);
-            Ant.Y += (Math.Sin(Ant.Vect) * Ant.Speed + (App1.Rnd.Next(4) - 2) * Math.PI / 180);
+            Ant.X += Math.Cos(Ant.Vect + (App1.Rnd.Next(6) - 3) * Math.PI / 180) * Ant.Speed;
+            Ant.Y += Math.Sin(Ant.Vect + (App1.Rnd.Next(6) - 3) * Math.PI / 180) * Ant.Speed;
 
-            if (Ant.X > (int)MainCanvas.ActualWidth - 2 || Ant.X < 1)
+            if (Ant.X > App1.Width - 2 || Ant.X < 1)
             {
                 Ant.Vect = Math.PI - Ant.Vect;
-                Ant.X = Ant.X < 1 ? 1 : (int)MainCanvas.ActualWidth - 2;
+                Ant.X = Ant.X < 1 ? 1 : App1.Width - 2;
             }
-            if (Ant.Y > (int)MainCanvas.ActualHeight - 2 || Ant.Y < 1)
+            if (Ant.Y > App1.Height - 2 || Ant.Y < 1)
             {
                 Ant.Vect = Math.PI * 2 - Ant.Vect;
-                Ant.Y = Ant.Y < 1 ? 1 : (int)MainCanvas.ActualHeight - 2;
+                Ant.Y = Ant.Y < 1 ? 1 : App1.Height - 2;
             }
 
             Ant.Steps[0]++;
@@ -917,7 +935,7 @@ namespace AntsAI
                 Ellipse EllipseAnt = new Ellipse() {
                     Width = App1.AntRadius * 2,
                     Height = App1.AntRadius * 2,
-                    Fill = Target < 9 ? App1.Red : Target < 18 ? App1.Blue : App1.DarkGray };
+                    Fill = Target < 9 ? App1.FoodColor : Target < 18 ? App1.HomeColor : App1.ScoutColor };
 
                 MainCanvas.Children.Add(EllipseAnt);
 
@@ -933,15 +951,12 @@ namespace AntsAI
 
                 App1.Ants.Remove(Ant);
             }
-            AntsText.Text = $"Ants: {App1.Ants.Count} | {(int)AntsSlider.Value}";
+            if (App1.ModeButtonTrigger) AntsText1.Text = $"Max Ants: {App1.AntsQuantity} Ants: {App1.Ants.Count}";
+            else AntsText2.Text = $"Max Ants: {App1.AntsQuantity} Ants: {App1.Ants.Count}";
         }
         private void AntsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (!App1.ModeButtonTrigger) return;
-
-            int Value = (int)((Slider)sender).Value;
-
-            App1.AntsQuantity = Value;
+            App1.AntsQuantity = (int)((Slider)sender).Value;
         }
         private void RadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -973,9 +988,9 @@ namespace AntsAI
                 Width = App1.BaseRadius * 2,
                 Height = App1.BaseRadius * 2,
 
-                Fill = App1.HomeButtonTrigger ? App1.Blue :
-                       App1.FoodButtonTrigger ? App1.Red :
-                       App1.Gray
+                Fill = App1.HomeButtonTrigger ? App1.HomeColor :
+                       App1.FoodButtonTrigger ? App1.FoodColor :
+                       App1.BorderColor
             };
 
             if (App1.HomeButtonTrigger)
@@ -1094,6 +1109,19 @@ namespace AntsAI
         {
             App1.Width = (int)MainCanvas.ActualWidth;
             App1.Height = (int)MainCanvas.ActualHeight;
+        }
+        private void QueensSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            App1.QueensQuantity = (int)((Slider)sender).Value;
+        }
+        private void MovableFoodsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            App1.MovableFoodsQuantity = (int)((Slider)sender).Value;
+        }
+        private void NewQueenSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            App1.NewQueen = (int)((Slider)sender).Value;
+            NewQueenText.Text = $"Steps to Queen: {App1.NewQueen}";
         }
     }
 }

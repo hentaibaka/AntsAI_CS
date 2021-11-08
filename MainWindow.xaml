@@ -6,10 +6,10 @@
     <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="180"/>
         </Grid.ColumnDefinitions>
         <Canvas x:Name="MainCanvas" Grid.Column="0" Background="#e2e2e2" MouseDown="MainCanvas_MouseDown" 
-                Grid.ColumnSpan="2" Margin="0,0,199.6,0.4"/>
+                Grid.ColumnSpan="2" Margin="0,0,180,0"/>
         <Grid Grid.Column="1" Background="#1b1d2e" Panel.ZIndex="10" >
             <Grid x:Name="Mode1Grid" Grid.Column="1" VerticalAlignment="Center" Visibility="Visible">
                 <Grid.RowDefinitions>
@@ -27,7 +27,8 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <TextBlock x:Name="AntsText" Grid.Row="0" Text="Ants: 1500" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                <TextBlock x:Name="AntsText1" Grid.Row="0" Text="Max Ants: 1500 Ants: 0" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                           TextWrapping="Wrap" TextAlignment="Center"
                            FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
                 <Slider    x:Name="AntsSlider" Grid.Row="1" Width ="150" Height="25" 
                            Minimum="1" Maximum="3500" Value="1500" ValueChanged="AntsSlider_ValueChanged"/>
@@ -47,9 +48,9 @@
                         Click="ModeButton_Click"  FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
                 <Button x:Name="StartButton1" Grid.Row="9" Width="100" Height="35" Margin="5" Background="#666699" Content="Start" 
                         Click="StartButton_Click" FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
-                <TextBlock x:Name="TextFPS1" Grid.Row="10" VerticalAlignment="Center" HorizontalAlignment="Center" Text="----" 
+                <TextBlock x:Name="TextFPS1" Grid.Row="10" VerticalAlignment="Center" HorizontalAlignment="Center" Text="0 ms | 0 FPS" 
                            FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
-                <TextBlock x:Name="TextCounter" Grid.Row="11" VerticalAlignment="Center" HorizontalAlignment="Center" Text="----" 
+                <TextBlock x:Name="TextCounter" Grid.Row="11" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Count: 0" 
                            FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
             </Grid>
             <Grid x:Name="Mode2Grid" Grid.Column="1" VerticalAlignment="Center" Visibility="Collapsed">
@@ -61,12 +62,35 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
-                <Button x:Name="ModeButton2" Grid.Row="0" Width="100" Height="35" Margin="5" Background="#FFDA49C1" Content="Mode" 
+                <TextBlock x:Name="AntsText2" Grid.Row="0" Text="Max Ants: 1500 Ants: 0" VerticalAlignment="Center" HorizontalAlignment="Center"
+                           TextWrapping="Wrap" TextAlignment="Center"
+                           FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
+                <Slider    x:Name="AntsSlider2" Grid.Row="1" Width ="150" Height="25" 
+                           Minimum="1" Maximum="3500" Value="1500" ValueChanged="AntsSlider_ValueChanged"/>
+                <TextBlock x:Name="QueensText" Grid.Row="2" Text="Max Queens: 5 Queens: 1" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                           TextWrapping="Wrap" TextAlignment="Center" 
+                           FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
+                <Slider    x:Name="QueensSlider" Grid.Row="3" Width ="150" Height="25" 
+                           Minimum="1" Maximum="20" Value="5" ValueChanged="QueensSlider_ValueChanged"/>
+                <TextBlock x:Name="NewQueenText" Grid.Row="4" Text="Steps to Queen: 400" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                           TextWrapping="Wrap" TextAlignment="Center" 
+                           FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
+                <Slider    x:Name="NewQueenSlider" Grid.Row="5" Width ="150" Height="25" 
+                           Minimum="100" Maximum="1000" Value="400" ValueChanged="NewQueenSlider_ValueChanged"/>
+                <TextBlock x:Name="MovableFoodsText" Grid.Row="6" Text="Food: 10" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                           FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
+                <Slider    x:Name="MovableFoodsSlider" Grid.Row="7" Width ="150" Height="25" 
+                           Minimum="1" Maximum="30" Value="10" ValueChanged="MovableFoodsSlider_ValueChanged"/>
+                <Button x:Name="ModeButton2" Grid.Row="8" Width="100" Height="35" Margin="5" Background="#FFDA49C1" Content="Mode" 
                         Click="ModeButton_Click"  FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
-                <Button x:Name="StartButton2" Grid.Row="1" Width="100" Height="35" Margin="5" Background="#666699" Content="Start" 
+                <Button x:Name="StartButton2" Grid.Row="9" Width="100" Height="35" Margin="5" Background="#666699" Content="Start" 
                         Click="StartButton_Click" FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
-                <TextBlock x:Name="TextFPS2" Grid.Row="10" VerticalAlignment="Center" HorizontalAlignment="Center" Text="----" 
+                <TextBlock x:Name="TextFPS2" Grid.Row="10" VerticalAlignment="Center" HorizontalAlignment="Center" Text="0 ms | 0 FPS" 
                            FontSize="20px" FontFamily="Tahoma, Geneva, Verdana, sans-serif" Foreground="#e2e2e2"/>
             </Grid>
         </Grid>
